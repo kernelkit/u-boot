@@ -107,6 +107,9 @@
 #define DEV_GMII_MAC_CFG_MAC_ENA	0xc
 #define		DEV_GMII_MAC_CFG_MAC_ENA_RX_ENA		BIT(4)
 #define		DEV_GMII_MAC_CFG_MAC_ENA_TX_ENA		BIT(0)
+#define DEV_GMII_MAC_CFG_MAC_MODE      0x10
+#define		DEV_GMII_MAC_CFG_MAC_MODE_GIGA_MODE_ENA BIT(4)
+#define		DEV_GMII_MAC_CFG_MAC_MODE_FDX_ENA       BIT(0)
 
 #define DEV_PORT_MODE_CLK		0x4
 #define		DEV_PORT_MODE_CLK_PHY_RST		BIT(2)
@@ -114,6 +117,9 @@
 #define DEV_MAC_CFG_MAC_ENA		0x10
 #define		DEV_MAC_CFG_MAC_ENA_RX_ENA		BIT(4)
 #define		DEV_MAC_CFG_MAC_ENA_TX_ENA		BIT(0)
+#define DEV_MAC_CFG_MAC_MODE           0x14
+#define		DEV_MAC_CFG_MAC_MODE_GIGA_MODE_ENA      BIT(4)
+#define		DEV_MAC_CFG_MAC_MODE_FDX_ENA            BIT(0)
 #define DEV_MAC_CFG_MAC_IFG		0x24
 #define		DEV_MAC_CFG_MAC_IFG_TX_IFG(x)		((x) << 8)
 #define		DEV_MAC_CFG_MAC_IFG_RX_IFG2(x)		((x) << 4)
@@ -259,6 +265,11 @@ static void luton_gmii_port_init(struct luton_private *priv, int port)
 	       DEV_GMII_MAC_CFG_MAC_ENA_TX_ENA,
 	       regs + DEV_GMII_MAC_CFG_MAC_ENA);
 
+	/* Setup 1G */
+	writel(DEV_GMII_MAC_CFG_MAC_MODE_GIGA_MODE_ENA |
+	       DEV_GMII_MAC_CFG_MAC_MODE_FDX_ENA,
+	       regs + DEV_GMII_MAC_CFG_MAC_MODE);
+
 	/* Make VLAN aware for CPU traffic */
 	writel(ANA_PORT_VLAN_CFG_AWARE_ENA |
 	       ANA_PORT_VLAN_CFG_POP_CNT(1) |
@@ -280,6 +291,11 @@ static void luton_port_init(struct luton_private *priv, int port)
 	writel(DEV_MAC_CFG_MAC_ENA_RX_ENA |
 	       DEV_MAC_CFG_MAC_ENA_TX_ENA,
 	       regs + DEV_MAC_CFG_MAC_ENA);
+
+	/* Setup 1G */
+	writel(DEV_MAC_CFG_MAC_MODE_GIGA_MODE_ENA |
+	       DEV_MAC_CFG_MAC_MODE_FDX_ENA,
+	       regs + DEV_MAC_CFG_MAC_MODE);
 
 	/* Make VLAN aware for CPU traffic */
 	writel(ANA_PORT_VLAN_CFG_AWARE_ENA |
@@ -662,13 +678,14 @@ static int luton_probe(struct udevice *dev)
 		addr_size = res.end - res.start;
 
 		/* If the bus is new then create a new bus */
-		if (!get_mdiobus(addr_base, addr_size))
-			priv->bus[miim_count] =
-				mscc_mdiobus_init(miim, &miim_count, addr_base,
-						  addr_size);
-
-		/* Connect mdio bus with the port */
 		bus = get_mdiobus(addr_base, addr_size);
+		if (!bus) {
+			bus = mscc_mdiobus_init(miim, miim_count, addr_base,
+						addr_size);
+			if (!bus)
+				return -ENOMEM;
+			priv->bus[miim_count++] = bus;
+		}
 
 		/* Get serdes info */
 		ret = ofnode_parse_phandle_with_args(node, "phys", NULL,

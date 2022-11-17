@@ -195,6 +195,12 @@ dtb-$(CONFIG_ARCH_MVEBU) +=			\
 	armada-xp-db-xc3-24g4xg.dtb		\
 	armada-xp-crs305-1g-4s.dtb
 
+dtb-$(CONFIG_TARGET_FIREANT) += \
+	fireant_pcb125.dtb \
+	fireant_pcb134_nand.dtb \
+	fireant_pcb134_emmc.dtb \
+	fireant_pcb135_nand.dtb \
+	fireant_pcb135_emmc.dtb
 dtb-$(CONFIG_ARCH_UNIPHIER_LD11) += \
 	uniphier-ld11-global.dtb \
 	uniphier-ld11-ref.dtb

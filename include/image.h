@@ -303,6 +303,7 @@ enum {
 	IH_COMP_LZMA,			/* lzma  Compression Used	*/
 	IH_COMP_LZO,			/* lzo   Compression Used	*/
 	IH_COMP_LZ4,			/* lz4   Compression Used	*/
+	IH_COMP_XZ,			/* xz    Compression Used	*/
 
 	IH_COMP_COUNT,
 };
@@ -1339,6 +1340,15 @@ ulong android_image_get_kcomp(const struct andr_img_hdr *hdr);
 void android_print_contents(const struct andr_img_hdr *hdr);
 
 #endif /* CONFIG_ANDROID_BOOT_IMAGE */
+
+/**
+ * print_decomp_msg() - Print a suitable decompression/loading message
+ *
+ * @type:	OS type (IH_OS_...)
+ * @comp_type:	Compression type being used (IH_COMP_...)
+ * @is_xip:	true if the load address matches the image start
+ */
+void print_decomp_msg(int comp_type, int type, bool is_xip);
 
 /**
  * board_fit_config_name_match() - Check for a matching board name

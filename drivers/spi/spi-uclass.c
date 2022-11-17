@@ -50,7 +50,7 @@ int dm_spi_claim_bus(struct udevice *dev)
 	struct dm_spi_ops *ops = spi_get_ops(bus);
 	struct dm_spi_bus *spi = dev_get_uclass_priv(bus);
 	struct spi_slave *slave = dev_get_parent_priv(dev);
-	int speed;
+	int speed, ret;
 
 	speed = slave->max_hz;
 	if (spi->max_hz) {
@@ -61,13 +61,10 @@ int dm_spi_claim_bus(struct udevice *dev)
 	}
 	if (!speed)
 		speed = SPI_DEFAULT_SPEED_HZ;
-	if (speed != slave->speed) {
-		int ret = spi_set_speed_mode(bus, speed, slave->mode);
-
-		if (ret)
-			return log_ret(ret);
-		slave->speed = speed;
-	}
+	ret = spi_set_speed_mode(bus, speed, slave->mode);
+	if (ret)
+		return log_ret(ret);
+	slave->speed = speed;
 
 	return log_ret(ops->claim_bus ? ops->claim_bus(dev) : 0);
 }

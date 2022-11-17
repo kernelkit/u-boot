@@ -109,7 +109,7 @@ static int do_ubifs_load(cmd_tbl_t *cmdtp, int flag, int argc,
 	char *filename;
 	char *endp;
 	int ret;
-	u32 addr;
+	unsigned long addr;
 	u32 size = 0;
 
 	if (!ubifs_mounted) {
@@ -120,7 +120,15 @@ static int do_ubifs_load(cmd_tbl_t *cmdtp, int flag, int argc,
 	if (argc < 3)
 		return CMD_RET_USAGE;
 
-	addr = simple_strtoul(argv[1], &endp, 16);
+	if (!strcmp(argv[1], "-")) {
+		const char *addr_str = env_get("loadaddr");
+		if (addr_str != NULL)
+			addr = simple_strtoul(addr_str, NULL, 16);
+		else
+			addr = CONFIG_SYS_LOAD_ADDR;
+	} else
+		addr = simple_strtoul(argv[1], &endp, 16);
+
 	if (endp == argv[1])
 		return CMD_RET_USAGE;
 
@@ -131,7 +139,7 @@ static int do_ubifs_load(cmd_tbl_t *cmdtp, int flag, int argc,
 		if (endp == argv[3])
 			return CMD_RET_USAGE;
 	}
-	debug("Loading file '%s' to address 0x%08x (size %d)\n", filename, addr, size);
+	debug("Loading file '%s' to address 0x%08lx (size %d)\n", filename, addr, size);
 
 	ret = ubifs_load(filename, addr, size);
 	if (ret) {

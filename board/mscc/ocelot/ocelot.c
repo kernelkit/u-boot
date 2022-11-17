@@ -11,6 +11,7 @@
 #include <led.h>
 #include <wait_bit.h>
 #include <miiphy.h>
+#include <env.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -118,3 +119,20 @@ int embedded_dtb_select(void)
 	return 0;
 }
 #endif
+
+int board_late_init(void)
+{
+	if (env_get("pcb"))
+		return 0;	/* Overridden, it seems */
+	switch (gd->board_type) {
+	case BOARD_TYPE_PCB120:
+		env_set("pcb", "pcb120");
+		break;
+	case BOARD_TYPE_PCB123:
+		env_set("pcb", "pcb123");
+		break;
+	default:
+		env_set("pcb", "unknown");
+	}
+	return 0;
+}

@@ -47,10 +47,14 @@
 #error Unknown DDR size - please add!
 #endif
 
+#define CONFIG_SYS_REDUNDAND_ENVIRONMENT
+#define CONFIG_ENV_SIZE_REDUND		CONFIG_ENV_SIZE
+#define CONFIG_ENV_OFFSET_REDUND	(CONFIG_ENV_OFFSET + CONFIG_ENV_SECT_SIZE)
+
 #define CONFIG_CONS_INDEX		1
 
 #define CONFIG_SYS_MEMTEST_START	CONFIG_SYS_SDRAM_BASE
-#define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_SDRAM_BASE + CONFIG_SYS_SDRAM_SIZE - SZ_1M)
+#define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_SDRAM_BASE + CONFIG_SYS_SDRAM_SIZE - SZ_4M)
 
 #define CONFIG_SYS_MONITOR_BASE         CONFIG_SYS_TEXT_BASE
 
@@ -67,17 +71,29 @@
 
 #define CONFIG_EXTRA_ENV_SETTINGS					\
 	VCOREIII_DEFAULT_MTD_ENV					\
-	"loadaddr=0x81000000\0"						\
-	"spi_image_off=0x00100000\0"					\
+	"loadaddr=81000000\0"						\
 	"console=ttyS0,115200\0"					\
 	"setup=setenv bootargs console=${console} ${mtdparts}"		\
-	"${bootargs_extra}\0"						\
-	"spiboot=run setup; sf probe; sf read ${loadaddr}"		\
-	"${spi_image_off} 0x600000; bootm ${loadaddr}\0"		\
-	"ubootfile=u-boot.bin\0"					\
-	"update=sf probe;mtdparts;dhcp ${loadaddr} ${ubootfile};"	\
-	"sf erase UBoot 0x100000;"					\
-	"sf write ${loadaddr} UBoot  ${filesize}\0"			\
-	"bootcmd=run spiboot\0"						\
+	" fis_act=${active} ${bootargs_extra}\0"			\
+        "ramboot=run setup; bootm #${pcb}\0"                            \
+	"netboot=dhcp; run ramboot\0"					\
+	"nor_image=new.itb\0"						\
+	"nor_dlup=dhcp ${nor_image}; run nor_update\0"			\
+	"nor_update=sf probe;sf update ${fileaddr} linux ${filesize}\0" \
+        "nor_boot=sf probe"                                             \
+	"; env set active linux; run nor_tryboot"                       \
+	"; env set active linux.bk; run nor_tryboot\0"                  \
+	"nor_tryboot=mtd read ${active} ${loadaddr}; run ramboot\0"     \
+	"ubupdate=sf probe;sf update ${fileaddr} UBoot ${filesize}\0"	\
+	"bootcmd=run nor_boot\0"					\
 	""
+
+#define CONFIG_ENV_FLAGS_LIST_STATIC "pcb:sc,pcb_rev:do"
+
+/* Env (pcb) is setup by board code */
+#define CONFIG_BOARD_LATE_INIT
+#define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+
+#define CONFIG_OF_BOARD_SETUP   /* Need to inject misc board stuff */
+
 #endif				/* __VCOREIII_H */

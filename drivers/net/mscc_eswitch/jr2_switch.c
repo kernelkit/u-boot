@@ -21,6 +21,8 @@
 
 #define ANA_AC_RAM_CTRL_RAM_INIT		0x94358
 #define ANA_AC_STAT_GLOBAL_CFG_PORT_RESET	0x94370
+#define ANA_AC_SRC_CFG1(x)			(0x94400 + 0x4 * (x))
+#define ANA_AC_SRC_CFG2(x)			(0x94404 + 0x4 * (x))
 
 #define ANA_CL_PORT_VLAN_CFG(x)			(0x24018 + 0xc8 * (x))
 #define		ANA_CL_PORT_VLAN_CFG_AWARE_ENA			BIT(19)
@@ -214,6 +216,72 @@
 
 #define VOP_RAM_CTRL_RAM_INIT			0x43638
 
+/* Serdes 10G register targets */
+#define SD10G65_SD10G65_DES_CFG0 0x0
+#define SD10G65_SD10G65_MOEBDIV_CFG0 0x4
+#define SD10G65_SD10G65_OB_CFG0 0x40
+#define SD10G65_SD10G65_OB_CFG1 0x44
+#define SD10G65_SD10G65_OB_CFG2 0x48
+#define SD10G65_SD10G65_OB_CFG3 0x4c
+#define SD10G65_SD10G65_SBUS_TX_CFG 0x50
+#define SD10G65_SD10G65_TX_SVN_ID 0x54
+#define SD10G65_SD10G65_TX_REV_ID 0x58
+#define SD10G65_SD10G65_IB_CFG0 0x80
+#define SD10G65_SD10G65_IB_CFG1 0x84
+#define SD10G65_SD10G65_IB_CFG2 0x88
+#define SD10G65_SD10G65_IB_CFG3 0x8c
+#define SD10G65_SD10G65_IB_CFG4 0x90
+#define SD10G65_SD10G65_IB_CFG5 0x94
+#define SD10G65_SD10G65_IB_CFG6 0x98
+#define SD10G65_SD10G65_IB_CFG7 0x9c
+#define SD10G65_SD10G65_IB_CFG8 0xa0
+#define SD10G65_SD10G65_IB_CFG9 0xa4
+#define SD10G65_SD10G65_IB_CFG10 0xa8
+#define SD10G65_SD10G65_IB_CFG11 0xac
+#define SD10G65_SD10G65_SBUS_RX_CFG 0xb0
+#define SD10G65_SD10G65_RX_SVN_ID 0xb4
+#define SD10G65_SD10G65_RX_REV_ID 0xb8
+#define SD10G65_SD10G65_RX_RCPLL_CFG0 0xc0
+#define SD10G65_SD10G65_RX_RCPLL_CFG1 0xc4
+#define SD10G65_SD10G65_RX_RCPLL_CFG2 0xc8
+#define SD10G65_SD10G65_RX_RCPLL_STAT0 0xcc
+#define         SD10G65_SD10G65_RX_RCPLL_STAT0_PLLF_LOCK_STAT BIT(31)
+#define SD10G65_SD10G65_RX_RCPLL_STAT1 0xd0
+#define         SD10G65_SD10G65_RX_RCPLL_STAT1_PLLF_FSM_STAT 0xF
+#define SD10G65_SD10G65_RX_SYNTH_CFG0 0x100
+#define SD10G65_SD10G65_RX_SYNTH_CFG1 0x104
+#define SD10G65_SD10G65_RX_SYNTH_CFG2 0x108
+#define SD10G65_SD10G65_RX_SYNTH_CFG3 0x10c
+#define SD10G65_SD10G65_RX_SYNTH_CFG4 0x110
+#define SD10G65_SD10G65_RX_SYNTH_CDRLF 0x114
+#define SD10G65_SD10G65_RX_SYNTH_QUALIFIER0 0x118
+#define SD10G65_SD10G65_RX_SYNTH_QUALIFIER1 0x11c
+#define SD10G65_SD10G65_RX_SYNTH_SYNC_CTRL 0x120
+#define SD10G65_F2DF_CFG_STAT 0x124
+#define SD10G65_SD10G65_TX_SYNTH_CFG0 0x140
+#define SD10G65_SD10G65_TX_SYNTH_CFG1 0x144
+#define SD10G65_SD10G65_TX_SYNTH_CFG3 0x148
+#define SD10G65_SD10G65_TX_SYNTH_CFG4 0x14c
+#define SD10G65_SD10G65_SSC_CFG0 0x150
+#define SD10G65_SD10G65_SSC_CFG1 0x154
+#define SD10G65_SD10G65_TX_RCPLL_CFG0 0x180
+#define SD10G65_SD10G65_TX_RCPLL_CFG1 0x184
+#define SD10G65_SD10G65_TX_RCPLL_CFG2 0x188
+#define SD10G65_SD10G65_TX_RCPLL_STAT0 0x18c
+#define         SD10G65_SD10G65_TX_RCPLL_STAT0_PLLF_LOCK_STAT BIT(31)
+#define SD10G65_SD10G65_TX_RCPLL_STAT1 0x190
+#define         SD10G65_SD10G65_TX_RCPLL_STAT1_PLLF_FSM_STAT 0xF
+#define XFI_SHELL_KR_CONTROL 0x0
+#define XFI_SHELL_XFI_MODE 0x4
+#define XFI_SHELL_XFI_STATUS 0x8
+#define XFI_SHELL_INT_CTRL 0xc
+#define XFI_SHELL_SSF_HYST_ENA_CTRL 0x10
+#define XFI_SHELL_SSF_HYST_TIMING_CTRL 0x14
+#define XFI_SHELL_HSS_STICKY 0x18
+#define XFI_SHELL_HSS_MASK 0x1c
+#define XFI_SHELL_HSS_STATUS 0x20
+#define XFI_SHELL_DATA_VALID_DETECT_CTRL 0x24
+
 #define XTR_VALID_BYTES(x)	(4 - ((x) & 3))
 #define MAC_VID			0
 #define CPU_PORT		53
@@ -222,6 +290,7 @@
 #define ETH_ALEN		6
 #define PGID_BROADCAST		510
 #define PGID_UNICAST		511
+#define NPI_PORT		48
 
 static const char * const regs_names[] = {
 	"port0", "port1", "port2", "port3", "port4", "port5", "port6", "port7",
@@ -230,13 +299,16 @@ static const char * const regs_names[] = {
 	"port22", "port23", "port24", "port25", "port26", "port27", "port28",
 	"port29", "port30", "port31", "port32", "port33", "port34", "port35",
 	"port36", "port37", "port38", "port39", "port40", "port41", "port42",
-	"port43", "port44", "port45", "port46", "port47",
+	"port43", "port44", "port45", "port46", "port47", "port48", "port49",
+	"port50", "port51", "port52",
 	"ana_ac", "ana_cl", "ana_l2", "asm", "hsio", "lrn",
-	"qfwd", "qs", "qsys", "rew",
+	"qfwd", "qs", "qsys", "rew", "gcb", "icpu",
+	"xgana0", "xgana1", "xgana2", "xgana3",
+	"xgxfi0", "xgxfi1", "xgxfi2", "xgxfi3",
 };
 
 #define REGS_NAMES_COUNT ARRAY_SIZE(regs_names) + 1
-#define MAX_PORT 48
+#define MAX_PORT 53
 
 enum jr2_ctrl_regs {
 	ANA_AC = MAX_PORT,
@@ -249,6 +321,16 @@ enum jr2_ctrl_regs {
 	QS,
 	QSYS,
 	REW,
+	GCB,
+	ICPU,
+	XGANA0,
+	XGANA1,
+	XGANA2,
+	XGANA3,
+	XGXFI0,
+	XGXFI1,
+	XGXFI2,
+	XGXFI3,
 };
 
 #define JR2_MIIM_BUS_COUNT 3
@@ -277,6 +359,11 @@ static const unsigned long jr2_regs_qs[] = {
 static struct mscc_miim_dev miim[JR2_MIIM_BUS_COUNT];
 static int miim_count = -1;
 
+static bool is_10g(u8 port)
+{
+	return (port > 48 && port < 53);
+}
+
 static void jr2_cpu_capture_setup(struct jr2_private *priv)
 {
 	/* ASM: No preamble and IFH prefix on CPU injected frames */
@@ -302,6 +389,7 @@ static void jr2_cpu_capture_setup(struct jr2_private *priv)
 static void jr2_port_init(struct jr2_private *priv, int port)
 {
 	void __iomem *regs = priv->regs[port];
+	u32 ofs, val;
 
 	/* Enable PCS */
 	writel(DEV_PCS1G_CFG_PCS1G_CFG_PCS_ENA,
@@ -341,6 +429,14 @@ static void jr2_port_init(struct jr2_private *priv, int port)
 	       MAC_VID,
 	       priv->regs[ANA_CL] + ANA_CL_PORT_VLAN_CFG(port));
 
+	/* Enable 2G5 shadow device for 10G port */
+	if (is_10g(port)) {
+		val = readl(priv->regs[HSIO] + HSIO_HW_CFGSTAT_HW_CFG);
+		ofs = port == 49 ? 12 : port == 50 ? 14 : port == 51 ? 16 : 18;
+		val = val | (3 << ofs);
+		writel(val, priv->regs[HSIO] + HSIO_HW_CFGSTAT_HW_CFG);
+	}
+
 	/* Enable CPU port for any frame transfer */
 	setbits_le32(priv->regs[QFWD] + QFWD_SYSTEM_SWITCH_PORT_MODE(port),
 		     QFWD_SYSTEM_SWITCH_PORT_MODE_PORT_ENA);
@@ -364,7 +460,6 @@ static void serdes6g_setup(void __iomem *base, uint32_t addr,
 {
 	u32 ib_if_mode = 0;
 	u32 ib_qrate = 0;
-	u32 ib_cal_ena = 0;
 	u32 ib1_tsdet = 0;
 	u32 ob_lev = 0;
 	u32 ob_ena_cas = 0;
@@ -376,7 +471,6 @@ static void serdes6g_setup(void __iomem *base, uint32_t addr,
 	case PHY_INTERFACE_MODE_SGMII:
 		ib_if_mode = 1;
 		ib_qrate = 1;
-		ib_cal_ena = 1;
 		ib1_tsdet = 3;
 		ob_lev = 48;
 		ob_ena_cas = 2;
@@ -398,6 +492,12 @@ static void serdes6g_setup(void __iomem *base, uint32_t addr,
 
 	if (interface == PHY_INTERFACE_MODE_QSGMII)
 		writel(0xfff, base + HSIO_HW_CFGSTAT_HW_CFG);
+
+	writel(HSIO_ANA_SERDES6G_OB_CFG_RESISTOR_CTRL(1) |
+	       HSIO_ANA_SERDES6G_OB_CFG_SR(7) |
+	       HSIO_ANA_SERDES6G_OB_CFG_SR_H |
+	       HSIO_ANA_SERDES6G_OB_CFG_ENA1V_MODE(ob_ena1v_mode) |
+	       HSIO_ANA_SERDES6G_OB_CFG_POL, base + HSIO_ANA_SERDES6G_OB_CFG);
 
 	writel(HSIO_ANA_SERDES6G_COMMON_CFG_IF_MODE(3),
 	       base + HSIO_ANA_SERDES6G_COMMON_CFG);
@@ -428,6 +528,21 @@ static void serdes6g_setup(void __iomem *base, uint32_t addr,
 	       HSIO_ANA_SERDES6G_IB_CFG1_TSDET(3) |
 	       HSIO_ANA_SERDES6G_IB_CFG1_TJTAG(8),
 	       base + HSIO_ANA_SERDES6G_IB_CFG1);
+
+	writel(HSIO_ANA_SERDES6G_IB_CFG2_UREG(4) |
+	       HSIO_ANA_SERDES6G_IB_CFG2_UMAX(2) |
+	       HSIO_ANA_SERDES6G_IB_CFG2_TCALV(12) |
+	       HSIO_ANA_SERDES6G_IB_CFG2_OCALS(32) |
+	       HSIO_ANA_SERDES6G_IB_CFG2_OINFS(7) |
+	       HSIO_ANA_SERDES6G_IB_CFG2_OINFI(0x1f) |
+	       HSIO_ANA_SERDES6G_IB_CFG2_TINFV(3),
+	       base + HSIO_ANA_SERDES6G_IB_CFG2);
+
+	writel(HSIO_ANA_SERDES6G_IB_CFG3_INI_OFFSET(0x1f) |
+	       HSIO_ANA_SERDES6G_IB_CFG3_INI_LP(1) |
+	       HSIO_ANA_SERDES6G_IB_CFG3_INI_MID(0x1f),
+	       base + HSIO_ANA_SERDES6G_IB_CFG3);
+
 	writel(HSIO_DIG_SERDES6G_MISC_CFG_LANE_RST,
 	       base + HSIO_DIG_SERDES6G_MISC_CFG);
 
@@ -502,7 +617,7 @@ static void serdes6g_setup(void __iomem *base, uint32_t addr,
 	writel(HSIO_ANA_SERDES6G_IB_CFG_REG_ENA |
 	       HSIO_ANA_SERDES6G_IB_CFG_EQZ_ENA |
 	       HSIO_ANA_SERDES6G_IB_CFG_SAM_ENA |
-	       HSIO_ANA_SERDES6G_IB_CFG_CAL_ENA(ib_cal_ena) |
+	       HSIO_ANA_SERDES6G_IB_CFG_CAL_ENA(1) |
 	       HSIO_ANA_SERDES6G_IB_CFG_CONCUR |
 	       HSIO_ANA_SERDES6G_IB_CFG_SIG_DET_ENA |
 	       HSIO_ANA_SERDES6G_IB_CFG_REG_PAT_SEL_OFF(0) |
@@ -527,7 +642,7 @@ static void serdes6g_setup(void __iomem *base, uint32_t addr,
 	writel(HSIO_ANA_SERDES6G_IB_CFG_REG_ENA |
 	       HSIO_ANA_SERDES6G_IB_CFG_EQZ_ENA |
 	       HSIO_ANA_SERDES6G_IB_CFG_SAM_ENA |
-	       HSIO_ANA_SERDES6G_IB_CFG_CAL_ENA(ib_cal_ena) |
+	       HSIO_ANA_SERDES6G_IB_CFG_CAL_ENA(1) |
 	       HSIO_ANA_SERDES6G_IB_CFG_CONCUR |
 	       HSIO_ANA_SERDES6G_IB_CFG_SIG_DET_ENA |
 	       HSIO_ANA_SERDES6G_IB_CFG_REG_PAT_SEL_OFF(0) |
@@ -615,6 +730,77 @@ static void serdes1g_setup(void __iomem *base, uint32_t addr,
 	serdes1g_write(base, addr);
 }
 
+
+static void serdes10g_setup(struct jr2_private *priv, uint32_t port)
+{
+	void __iomem *tgt_ana;
+	u32 val, indx = port - 49;
+
+	writel(0x00200016, priv->regs[XGXFI0 + indx] + XFI_SHELL_XFI_MODE);
+
+	tgt_ana = priv->regs[XGANA0 + indx];
+	writel(0x7, tgt_ana + SD10G65_SD10G65_SBUS_RX_CFG);
+	writel(0x7, tgt_ana + SD10G65_SD10G65_SBUS_TX_CFG);
+	writel(0x2187, tgt_ana + SD10G65_SD10G65_OB_CFG0);
+	writel(0x31fd7d, tgt_ana + SD10G65_SD10G65_TX_RCPLL_CFG2);
+	writel(0x1ddc0117, tgt_ana + SD10G65_SD10G65_TX_SYNTH_CFG0);
+	writel(0, tgt_ana + SD10G65_SD10G65_TX_SYNTH_CFG3);
+	writel(0, tgt_ana + SD10G65_SD10G65_TX_SYNTH_CFG4);
+	writel(0x1200008, tgt_ana + SD10G65_SD10G65_TX_SYNTH_CFG1);
+	writel(0x1ddc001f, tgt_ana + SD10G65_SD10G65_TX_SYNTH_CFG0);
+	writel(0x230000, tgt_ana + SD10G65_SD10G65_SSC_CFG1);
+	writel(0x2127, tgt_ana + SD10G65_SD10G65_OB_CFG0);
+	writel(0x42f0820, tgt_ana + SD10G65_SD10G65_OB_CFG1);
+	writel(0x820820, tgt_ana + SD10G65_SD10G65_OB_CFG2);
+	writel(0xa1e51d, tgt_ana + SD10G65_SD10G65_TX_RCPLL_CFG2);
+	writel(0x2000021, tgt_ana + SD10G65_SD10G65_TX_RCPLL_CFG1);
+	writel(0x20031, tgt_ana + SD10G65_SD10G65_TX_RCPLL_CFG0);
+	mdelay(2);
+	val = readl(tgt_ana + SD10G65_SD10G65_TX_RCPLL_STAT0);
+	if ((SD10G65_SD10G65_TX_RCPLL_STAT0_PLLF_LOCK_STAT & val) == 0)
+		debug("Error: SD10G65::SD10G65_TX_RCPLL_STAT0.PLLF_LOCK_STAT is not 1!\n");
+	val = readl(tgt_ana + SD10G65_SD10G65_TX_RCPLL_STAT1);
+	if ((SD10G65_SD10G65_TX_RCPLL_STAT1_PLLF_FSM_STAT & val) != 13)
+		debug("Error: SD10G65_TX_RCPLL_STAT1.PLLF_FSM_STAT is not 13!\n");
+
+	writel(0x7, tgt_ana + SD10G65_SD10G65_SBUS_RX_CFG);
+	writel(0xa1e51d, tgt_ana + SD10G65_SD10G65_RX_RCPLL_CFG2);
+	writel(0x1fcc35b, tgt_ana + SD10G65_SD10G65_RX_SYNTH_CFG0);
+	writel(0x14008, tgt_ana + SD10G65_SD10G65_RX_SYNTH_CFG2);
+	writel(0x4104ea6, tgt_ana + SD10G65_SD10G65_IB_CFG0);
+	writel(0x811f0, tgt_ana + SD10G65_SD10G65_IB_CFG8);
+	writel(0, tgt_ana + SD10G65_SD10G65_RX_SYNTH_CFG3);
+	writel(0, tgt_ana + SD10G65_SD10G65_RX_SYNTH_CFG4);
+	writel(0x5241008, tgt_ana + SD10G65_SD10G65_RX_SYNTH_CFG1);
+	writel(0x1fcc35b, tgt_ana + SD10G65_SD10G65_RX_SYNTH_CFG0);
+	writel(0, tgt_ana + SD10G65_SD10G65_RX_SYNTH_SYNC_CTRL);
+	writel(0x1fcc35b, tgt_ana + SD10G65_SD10G65_RX_SYNTH_CFG0);
+	writel(0x14a52a3, tgt_ana + SD10G65_SD10G65_RX_SYNTH_CDRLF);
+	writel(0x41f, tgt_ana + SD10G65_SD10G65_IB_CFG5);
+	writel(0x2a17d0, tgt_ana + SD10G65_SD10G65_IB_CFG6);
+	writel(0x183f8606, tgt_ana + SD10G65_SD10G65_IB_CFG7);
+	writel(0x811f0, tgt_ana + SD10G65_SD10G65_IB_CFG8);
+	writel(0x2a560, tgt_ana + SD10G65_SD10G65_IB_CFG4);
+	writel(0x28294042, tgt_ana + SD10G65_SD10G65_IB_CFG3);
+	writel(0x4c00080, tgt_ana + SD10G65_SD10G65_IB_CFG10);
+	writel(0x7800, tgt_ana + SD10G65_SD10G65_IB_CFG11);
+	writel(0x480, tgt_ana + SD10G65_SD10G65_MOEBDIV_CFG0);
+	writel(0x6, tgt_ana + SD10G65_SD10G65_DES_CFG0);
+	writel(0xa1e51d, tgt_ana + SD10G65_SD10G65_RX_RCPLL_CFG2);
+	writel(0x2000021, tgt_ana + SD10G65_SD10G65_RX_RCPLL_CFG1);
+	writel(0x20070, tgt_ana + SD10G65_SD10G65_RX_RCPLL_CFG0);
+	mdelay(10);
+	writel(0x20071, tgt_ana + SD10G65_SD10G65_RX_RCPLL_CFG0);
+	writel(0x20031, tgt_ana + SD10G65_SD10G65_RX_RCPLL_CFG0);
+	mdelay(2);
+	val = readl(tgt_ana + SD10G65_SD10G65_RX_RCPLL_STAT0);
+	if ((SD10G65_SD10G65_RX_RCPLL_STAT0_PLLF_LOCK_STAT & val) == 0)
+		debug("Error: SD10G65::SD10G65_RX_RCPLL_STAT0.PLLF_LOCK_STAT is not 1!\n");
+	val = readl(tgt_ana + SD10G65_SD10G65_RX_RCPLL_STAT1);
+	if ((SD10G65_SD10G65_RX_RCPLL_STAT1_PLLF_FSM_STAT & val) != 13)
+		debug("Error: SD10G65::SD10G65_RX_RCPLL_STAT1.PLLF_FSM_STAT is not 13!\n");
+}
+
 static int ram_init(u32 val, void __iomem *addr)
 {
 	writel(val, addr);
@@ -667,6 +853,17 @@ static int jr2_initialize(struct jr2_private *priv)
 		return ret;
 
 	jr2_switch_config(priv);
+
+	/*
+	 * Disable port-to-port by switching
+	 * Put front ports in "port isolation modes" - i.e. they can't send
+	 * to other ports - via the PGID sorce masks.
+	 */
+	for (i = 0; i < MAX_PORT; i++) {
+		writel(0, priv->regs[ANA_AC] + ANA_AC_SRC_CFG1(i));
+		writel(0, priv->regs[ANA_AC] + ANA_AC_SRC_CFG2(i));
+	}
+
 
 	for (i = 0; i < MAX_PORT; i++)
 		jr2_port_init(priv, i);
@@ -741,10 +938,12 @@ static void serdes_setup(struct jr2_private *priv)
 		if (priv->ports[i].serdes_index < SERDES1G_MAX) {
 			serdes1g_setup(priv->regs[HSIO], mask,
 				       priv->ports[i].phy_mode);
-		} else {
+		} else if (priv->ports[i].serdes_index < SERDES6G_MAX) {
 			mask >>= SERDES6G(0);
 			serdes6g_setup(priv->regs[HSIO], mask,
 				       priv->ports[i].phy_mode);
+		} else {
+			serdes10g_setup(priv, i);
 		}
 	}
 }
@@ -847,6 +1046,7 @@ static int jr2_probe(struct udevice *dev)
 	struct mii_dev *bus;
 	struct ofnode_phandle_args phandle;
 	struct phy_device *phy;
+	u32 val;
 
 	if (!priv)
 		return -EINVAL;
@@ -861,6 +1061,17 @@ static int jr2_probe(struct udevice *dev)
 			return -ENOMEM;
 		}
 	}
+
+	val = readl(priv->regs[ICPU] + ICPU_RESET);
+	val |= ICPU_RESET_CORE_RST_PROTECT;
+	writel(val, priv->regs[ICPU] + ICPU_RESET);
+
+	val = readl(priv->regs[GCB] + PERF_SOFT_RST);
+	val |= PERF_SOFT_RST_SOFT_SWC_RST;
+	writel(val, priv->regs[GCB] + PERF_SOFT_RST);
+
+	while (readl(priv->regs[GCB] + PERF_SOFT_RST) & PERF_SOFT_RST_SOFT_SWC_RST)
+		;
 
 	/* Initialize miim buses */
 	memset(&miim, 0x0, sizeof(struct mscc_miim_dev) * JR2_MIIM_BUS_COUNT);
@@ -896,13 +1107,14 @@ static int jr2_probe(struct udevice *dev)
 		addr_size = res.end - res.start;
 
 		/* If the bus is new then create a new bus */
-		if (!get_mdiobus(addr_base, addr_size))
-			priv->bus[miim_count] =
-				mscc_mdiobus_init(miim, &miim_count, addr_base,
-						  addr_size);
-
-		/* Connect mdio bus with the port */
 		bus = get_mdiobus(addr_base, addr_size);
+		if (!bus) {
+			bus = mscc_mdiobus_init(miim, miim_count, addr_base,
+						addr_size);
+			if (!bus)
+				return -ENOMEM;
+			priv->bus[miim_count++] = bus;
+		}
 
 		/* Get serdes info */
 		ret = ofnode_parse_phandle_with_args(node, "phys", NULL,
@@ -921,8 +1133,17 @@ static int jr2_probe(struct udevice *dev)
 		phy = phy_connect(priv->ports[i].bus,
 				  priv->ports[i].phy_addr, dev,
 				  PHY_INTERFACE_MODE_NONE);
-		if (phy)
-			board_phy_config(phy);
+		if (phy) {
+			if (i != NPI_PORT) {
+				board_phy_config(phy);
+			} else {
+				phy_write(phy, 0, 23, 0xba20); /* Set SGMII mode */
+				phy_write(phy, 0,  0, 0x9040); /* Reset */
+				phy_write(phy, 0,  4, 0x0de1); /* Setup ANEG */
+				phy_write(phy, 0,  9, 0x0200); /* Setup ANEG */
+				phy_write(phy, 0,  0, 0x1240); /* Restart ANEG */
+			}
+		}
 	}
 
 	return 0;

@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2018 Microsemi Corporation
+ */
+
+&gpio {
+	spi2_pins: spi2-pins {
+		spi2 {
+			// CLK, D0, D1
+			pins = "GPIO_39", "GPIO_40", "GPIO_41";
+			function = "spi2";
+		};
+		cs {
+			// CS
+			pins = "GPIO_44";
+			function = "spi";
+		};
+	};
+};
+
+&spi0 {
+	interface-mapping-mask = <0x4000>;      // NAND CS14 = SPI2
+	spi-rx-delay-us = <500>;		// Tune for speed
+	// Dedicated SPI2 interface
+	spi-nand@e {
+		compatible = "spi-nand";
+		pinctrl-0 = <&spi2_pins>;
+		pinctrl-names = "default";
+		spi-max-frequency = <42000000>;
+		reg = <14>;
+	};
+};

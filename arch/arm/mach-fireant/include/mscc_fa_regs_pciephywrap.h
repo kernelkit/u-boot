@@ -1,0 +1,63 @@
+/*
+ Copyright (c) 2004-2018 Microsemi Corporation "Microsemi".
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+*/
+
+#ifndef _MSCC_FA_REGS_PCIEPHYWRAP_H_
+#define _MSCC_FA_REGS_PCIEPHYWRAP_H_
+
+#include "mscc_fa_regs_common.h"
+
+#define MSCC_PCIEPHYWRAP_PCIE_PHY_CFG        MSCC_IOREG(MSCC_TO_PCIE_PHY_WRAP,0x0)
+#define  MSCC_F_PCIEPHYWRAP_PCIE_PHY_CFG_PIPE_RST(x)    ((x) ? BIT(0) : 0)
+#define  MSCC_M_PCIEPHYWRAP_PCIE_PHY_CFG_PIPE_RST       BIT(0)
+#define  MSCC_X_PCIEPHYWRAP_PCIE_PHY_CFG_PIPE_RST(x)    ((x) & BIT(0) ? 1 : 0)
+#define  MSCC_F_PCIEPHYWRAP_PCIE_PHY_CFG_EXT_CFG_RST(x)  ((x) ? BIT(1) : 0)
+#define  MSCC_M_PCIEPHYWRAP_PCIE_PHY_CFG_EXT_CFG_RST     BIT(1)
+#define  MSCC_X_PCIEPHYWRAP_PCIE_PHY_CFG_EXT_CFG_RST(x)  ((x) & BIT(1) ? 1 : 0)
+#define  MSCC_F_PCIEPHYWRAP_PCIE_PHY_CFG_APB_IF_RST(x)  ((x) ? BIT(2) : 0)
+#define  MSCC_M_PCIEPHYWRAP_PCIE_PHY_CFG_APB_IF_RST     BIT(2)
+#define  MSCC_X_PCIEPHYWRAP_PCIE_PHY_CFG_APB_IF_RST(x)  ((x) & BIT(2) ? 1 : 0)
+#define  MSCC_F_PCIEPHYWRAP_PCIE_PHY_CFG_PCIE_CNTLR_PHY_RST_DIS(x)  ((x) ? BIT(3) : 0)
+#define  MSCC_M_PCIEPHYWRAP_PCIE_PHY_CFG_PCIE_CNTLR_PHY_RST_DIS     BIT(3)
+#define  MSCC_X_PCIEPHYWRAP_PCIE_PHY_CFG_PCIE_CNTLR_PHY_RST_DIS(x)  ((x) & BIT(3) ? 1 : 0)
+#define  MSCC_F_PCIEPHYWRAP_PCIE_PHY_CFG_AMBA_APB_RST_DIS(x)  ((x) ? BIT(4) : 0)
+#define  MSCC_M_PCIEPHYWRAP_PCIE_PHY_CFG_AMBA_APB_RST_DIS     BIT(4)
+#define  MSCC_X_PCIEPHYWRAP_PCIE_PHY_CFG_AMBA_APB_RST_DIS(x)  ((x) & BIT(4) ? 1 : 0)
+
+#define MSCC_PCIEPHYWRAP_PCIE_EXTCFG_CFG     MSCC_IOREG(MSCC_TO_PCIE_PHY_WRAP,0x1)
+#define  MSCC_F_PCIEPHYWRAP_PCIE_EXTCFG_CFG_CLK_DIV(x)  (GENMASK(2,0) & ((x) << 0))
+#define  MSCC_M_PCIEPHYWRAP_PCIE_EXTCFG_CFG_CLK_DIV     GENMASK(2,0)
+#define  MSCC_X_PCIEPHYWRAP_PCIE_EXTCFG_CFG_CLK_DIV(x)  (((x) >> 0) & GENMASK(2,0))
+#define  MSCC_F_PCIEPHYWRAP_PCIE_EXTCFG_CFG_WS_SETUP_WR(x)  (GENMASK(5,4) & ((x) << 4))
+#define  MSCC_M_PCIEPHYWRAP_PCIE_EXTCFG_CFG_WS_SETUP_WR     GENMASK(5,4)
+#define  MSCC_X_PCIEPHYWRAP_PCIE_EXTCFG_CFG_WS_SETUP_WR(x)  (((x) >> 4) & GENMASK(1,0))
+#define  MSCC_F_PCIEPHYWRAP_PCIE_EXTCFG_CFG_WS_EXEC_WR(x)  (GENMASK(9,8) & ((x) << 8))
+#define  MSCC_M_PCIEPHYWRAP_PCIE_EXTCFG_CFG_WS_EXEC_WR     GENMASK(9,8)
+#define  MSCC_X_PCIEPHYWRAP_PCIE_EXTCFG_CFG_WS_EXEC_WR(x)  (((x) >> 8) & GENMASK(1,0))
+#define  MSCC_F_PCIEPHYWRAP_PCIE_EXTCFG_CFG_WS_HOLD_WR(x)  (GENMASK(13,12) & ((x) << 12))
+#define  MSCC_M_PCIEPHYWRAP_PCIE_EXTCFG_CFG_WS_HOLD_WR     GENMASK(13,12)
+#define  MSCC_X_PCIEPHYWRAP_PCIE_EXTCFG_CFG_WS_HOLD_WR(x)  (((x) >> 12) & GENMASK(1,0))
+#define  MSCC_F_PCIEPHYWRAP_PCIE_EXTCFG_CFG_WS_EXEC_RD(x)  (GENMASK(17,16) & ((x) << 16))
+#define  MSCC_M_PCIEPHYWRAP_PCIE_EXTCFG_CFG_WS_EXEC_RD     GENMASK(17,16)
+#define  MSCC_X_PCIEPHYWRAP_PCIE_EXTCFG_CFG_WS_EXEC_RD(x)  (((x) >> 16) & GENMASK(1,0))
+
+
+#endif /* _MSCC_FA_REGS_PCIEPHYWRAP_H_ */

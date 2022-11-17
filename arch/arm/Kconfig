@@ -1479,6 +1479,23 @@ config TARGET_LS1046AFRWY
 	  The LS1046A Freeway Board (FRWY) is a high-performance
 	  development platform that supports the QorIQ LS1046A
 	  Layerscape Architecture processor.
+
+config TARGET_FIREANT
+	bool "Support MSCC FireAnt platform"
+	select ARM64
+	select ARMV8_SET_SMPEN
+	select ARMV8_MULTIENTRY
+	select ARMV8_SPIN_TABLE
+	select DM
+	select DM_GPIO
+	select DM_SERIAL
+	select OF_CONTROL
+	select SYS_NS16550
+	imply CMD_DM
+	  help
+	  Support for MSCC FireAnt reference board platform. It support
+	  2Gb DDR, and 2 A53 and a M3 core.
+
 config TARGET_H2200
 	bool "Support h2200"
 	select CPU_PXA
@@ -1662,6 +1679,8 @@ source "arch/arm/mach-davinci/Kconfig"
 
 source "arch/arm/mach-exynos/Kconfig"
 
+source "arch/arm/mach-fireant/Kconfig"
+
 source "arch/arm/mach-highbank/Kconfig"
 
 source "arch/arm/mach-integrator/Kconfig"
@@ -1794,6 +1813,7 @@ source "board/hisilicon/hikey/Kconfig"
 source "board/hisilicon/hikey960/Kconfig"
 source "board/hisilicon/poplar/Kconfig"
 source "board/isee/igep003x/Kconfig"
+source "board/mscc/fireant/Kconfig"
 source "board/phytec/pcm051/Kconfig"
 source "board/silica/pengwyn/Kconfig"
 source "board/spear/spear300/Kconfig"
@@ -1821,5 +1841,3 @@ config SPL_LDSCRIPT
 	default "arch/arm/cpu/arm926ejs/mxs/u-boot-spl.lds" if (ARCH_MX23 || ARCH_MX28) && !SPL_FRAMEWORK
 	default "arch/arm/cpu/arm1136/u-boot-spl.lds" if CPU_ARM1136
 	default "arch/arm/cpu/armv8/u-boot-spl.lds" if ARM64
-
-

@@ -107,7 +107,7 @@
 			reg = <0x1070034 0x68>;
 			gpio-controller;
 			#gpio-cells = <2>;
-			gpio-ranges = <&gpio 0 0 22>;
+			gpio-ranges = <&gpio 0 0 32>;
 
 			sgpio_pins: sgpio-pins {
 				pins = "GPIO_0", "GPIO_2", "GPIO_3", "GPIO_1";

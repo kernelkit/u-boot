@@ -97,6 +97,7 @@
 
 #define QS_XTR_GRP_CFG(x)			(4 * (x))
 #define		QS_XTR_GRP_CFG_MODE(x)			((x) << 2)
+#define		QS_XTR_GRP_CFG_STATUS_WORD_POS		BIT(1)
 #define		QS_XTR_GRP_CFG_BYTE_SWAP		BIT(0)
 #define QS_INJ_GRP_CFG(x)			(0x24 + (x) * 4)
 #define		QS_INJ_GRP_CFG_MODE(x)			((x) << 2)
@@ -111,6 +112,7 @@
 #define ETH_ALEN		6
 #define PGID_BROADCAST		13
 #define PGID_UNICAST		14
+#define PGID_SRC		80
 
 static const char *const regs_names[] = {
 	"port0", "port1", "port2", "port3", "port4", "port5", "port6",
@@ -174,7 +176,8 @@ static void serval_cpu_capture_setup(struct serval_private *priv)
 		 * Do byte-swap and expect status after last data word
 		 * Extraction: Mode: manual extraction) | Byte_swap
 		 */
-		writel(QS_XTR_GRP_CFG_MODE(1) | QS_XTR_GRP_CFG_BYTE_SWAP,
+		writel(QS_XTR_GRP_CFG_MODE(1) | QS_XTR_GRP_CFG_BYTE_SWAP |
+		       QS_XTR_GRP_CFG_STATUS_WORD_POS,
 		       priv->regs[QS] + QS_XTR_GRP_CFG(i));
 		/*
 		 * Injection: Mode: manual extraction | Byte_swap
@@ -349,6 +352,14 @@ static int serval_initialize(struct serval_private *priv)
 	ret = serval_switch_init(priv);
 	if (ret)
 		return ret;
+
+	/*
+	 * Disable port-to-port by switching
+	 * Put front ports in "port isolation modes" - i.e. they can't send
+	 * to other ports - via the PGID sorce masks.
+	 */
+	for (i = 0; i < MAX_PORT; i++)
+		writel(0, priv->regs[ANA] + ANA_PGID(PGID_SRC + i));
 
 	/* Flush queues */
 	mscc_flush(priv->regs[QS], serval_regs_qs);
@@ -536,13 +547,14 @@ static int serval_probe(struct udevice *dev)
 		addr_size = res.end - res.start;
 
 		/* If the bus is new then create a new bus */
-		if (!get_mdiobus(addr_base, addr_size))
-			priv->bus[miim_count] =
-				mscc_mdiobus_init(miim, &miim_count, addr_base,
-						  addr_size);
-
-		/* Connect mdio bus with the port */
 		bus = get_mdiobus(addr_base, addr_size);
+		if (!bus) {
+			bus = mscc_mdiobus_init(miim, miim_count, addr_base,
+						addr_size);
+			if (!bus)
+				return -ENOMEM;
+			priv->bus[miim_count++] = bus;
+		}
 
 		/* Get serdes info */
 		ret = ofnode_parse_phandle_with_args(node, "phys", NULL,

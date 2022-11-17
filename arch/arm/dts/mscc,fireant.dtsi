@@ -1,0 +1,370 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2018 Microsemi Corporation
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/clk/mchp,fireant.h>
+
+/ {
+	compatible = "mscc,fireant";
+	#address-cells = <2>;
+	#size-cells = <1>;
+
+	aliases {
+		spi0 = &spi0;
+		serial0 = &uart0;
+		serial1 = &uart1;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	cpus {
+		#address-cells = <2>;
+		#size-cells = <0>;
+
+		cpu-map {
+			cluster0 {
+				core0 {
+					cpu = <&cpu0>;
+				};
+				core1 {
+					cpu = <&cpu1>;
+				};
+			};
+		};
+
+		cpu0: cpu@0 {
+			compatible = "arm,cortex-a53", "arm,armv8";
+			device_type = "cpu";
+			reg = <0x0 0x0>;
+			enable-method = "psci";
+		};
+
+		cpu1: cpu@1 {
+			compatible = "arm,cortex-a53", "arm,armv8";
+			device_type = "cpu";
+			reg = <0x0 0x1>;
+			enable-method = "psci";
+		};
+
+	};
+
+	clocks: clocks {
+		#address-cells = <2>;
+		#size-cells = <1>;
+		ranges;
+		ahb_clk: ahb-clk {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <250000000>;
+		};
+		sys_clk: sys-clk {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <625000000>;
+		};
+                clks: clks@61110000c {
+			compatible = "mchp,fireant-clock";
+			#clock-cells = <1>;
+			reg = <6 0x1110000c 0x24>;
+		};
+	};
+
+	ahb {
+		compatible = "simple-bus";
+		#address-cells = <2>;
+		#size-cells = <1>;
+		ranges;
+
+		uart0: serial@600100000 {
+			pinctrl-0 = <&uart_pins>;
+			pinctrl-names = "default";
+			compatible = "ns16550a";
+			reg = <6 0x00100000 0x20>;
+			clocks = <&ahb_clk>;
+			clock-frequency = <250000000>;
+			reg-io-width = <4>;
+			reg-shift = <2>;
+
+			status = "disabled";
+		};
+
+		uart1: serial@600102000 {
+			pinctrl-0 = <&uart2_pins>;
+			pinctrl-names = "default";
+			compatible = "ns16550a";
+			reg = <6 0x00102000 0x20>;
+			clocks = <&ahb_clk>;
+			clock-frequency = <250000000>;
+			reg-io-width = <4>;
+			reg-shift = <2>;
+
+			status = "disabled";
+		};
+
+                spi0: spi-master@600104000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "snps,dw-apb-ssi";
+			reg = <6 0x00104000 0x40>;
+			num-chipselect = <4>;
+			bus-num = <0>;
+			reg-io-width = <4>;
+			reg-shift = <2>;
+			spi-max-frequency = <50000000>; /* max clock 50Mhz */
+			clocks = <&ahb_clk>;
+
+                        status = "disabled";
+		};
+
+		gpio: pinctrl@6110101e0 {
+			compatible = "mscc,fireant-pinctrl";
+			reg = <6 0x110101e0 0x90>, <6 0x10508010 0x100>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			gpio-ranges = <&gpio 0 0 64>;
+
+			sgpio_pins: sgpio-pins {
+				pins = "GPIO_0", "GPIO_1", "GPIO_2", "GPIO_3";
+				function = "sio";
+			};
+
+			sgpio1_pins: sgpio1-pins {
+				pins = "GPIO_4", "GPIO_5", "GPIO_12", "GPIO_13";
+				function = "sio1";
+			};
+
+                        i2c_pins: i2c-pins {
+				pins = "GPIO_14", "GPIO_15";
+				function = "twi";
+			};
+
+			sgpio2_pins: sgpio2-pins {
+				pins = "GPIO_30", "GPIO_31", "GPIO_32", "GPIO_33";
+				function = "sio2";
+			};
+
+			uart_pins: uart-pins {
+				pins = "GPIO_10", "GPIO_11";
+				function = "uart";
+			};
+
+			uart2_pins: uart2-pins {
+				pins = "GPIO_26", "GPIO_27";
+				function = "uart2";
+			};
+
+			uart3_pins: uart3-pins {
+				pins = "GPIO_23", "GPIO_24";
+				function = "uart3";
+			};
+
+			emmc_pins: emmc-pins {
+				pins = "GPIO_34", "GPIO_35", "GPIO_36",
+					"GPIO_37", "GPIO_38", "GPIO_39",
+					"GPIO_40", "GPIO_41", "GPIO_42",
+					"GPIO_43", "GPIO_44", "GPIO_45",
+					"GPIO_46", "GPIO_47";
+				function = "emmc";
+			};
+		};
+
+		sdhci0: sdhci@600800000 {
+			compatible = "mscc,fireant-sdhci";
+			status = "disabled";
+			reg = <6 0x00800000 0x1000>, <6 0x00000000 0xd0>;
+			pinctrl-0 = <&emmc_pins>;
+			pinctrl-names = "default";
+			clocks = <&clks CLK_ID_AUX1>;
+			clock-names = "core";
+			assigned-clocks = <&clks CLK_ID_AUX1>;
+			assigned-clock-rates = <800000000>;
+			bus-width = <8>;
+		};
+
+                i2c0: i2c@600101000 {
+			compatible = "snps,designware-i2c";
+			status = "disabled";
+			pinctrl-0 = <&i2c_pins>;
+			pinctrl-names = "default";
+			reg = <6 0x00101000 0x100>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			i2c-sda-hold-time-ns = <300>;
+			clock-frequency = <100000>;
+			clocks = <&ahb_clk>;
+		};
+
+		i2c0_imux: i2c0-imux@0 {
+			compatible = "i2c-mux-gpio";
+			status = "disabled";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			i2c-parent = <&i2c0>;
+		};
+
+		i2c0_emux: i2c0-emux@0 {
+			compatible = "i2c-mux-gpio";
+			status = "disabled";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			i2c-parent = <&i2c0>;
+		};
+
+                sgpio: gpio@61101036c {
+			compatible = "mscc,ocelot-sgpio";
+			status = "disabled";
+			clocks = <&sys_clk>;
+			pinctrl-0 = <&sgpio_pins>;
+			pinctrl-names = "default";
+			reg = <0x6 0x1101036c 0x100>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			gpio-ranges = <&sgpio 0 0 64>;
+		};
+
+		switch: switch@0 {
+			compatible = "mscc,vsc7558-switch";
+			reg = <6 0x10004000 0x4000>,   // DEV2G5_0
+			      <6 0x10010000 0x4000>,   // DEV2G5_1
+			      <6 0x1001c000 0x4000>,   // DEV2G5_2
+			      <6 0x10404000 0x4000>,   // DEV2G5_3
+			      <6 0x10410000 0x4000>,   // DEV2G5_4
+			      <6 0x1041c000 0x4000>,   // DEV2G5_5
+			      <6 0x10028000 0x4000>,   // DEV2G5_6
+			      <6 0x10034000 0x4000>,   // DEV2G5_7
+			      <6 0x10040000 0x4000>,   // DEV2G5_8
+			      <6 0x1004c000 0x4000>,   // DEV2G5_9
+			      <6 0x10058000 0x4000>,   // DEV2G5_10
+			      <6 0x10064000 0x4000>,   // DEV2G5_11
+			      <6 0x10070000 0x4000>,   // DEV2G5_12
+			      <6 0x10428000 0x4000>,   // DEV2G5_13
+			      <6 0x1007c000 0x4000>,   // DEV2G5_14
+			      <6 0x10088000 0x4000>,   // DEV2G5_15
+			      <6 0x10094000 0x4000>,   // DEV2G5_16
+			      <6 0x10098000 0x4000>,   // DEV2G5_17
+			      <6 0x1009c000 0x4000>,   // DEV2G5_18
+			      <6 0x100a0000 0x4000>,   // DEV2G5_19
+			      <6 0x100a4000 0x4000>,   // DEV2G5_20
+			      <6 0x100a8000 0x4000>,   // DEV2G5_21
+			      <6 0x100ac000 0x4000>,   // DEV2G5_22
+			      <6 0x100b0000 0x4000>,   // DEV2G5_23
+			      <6 0x10434000 0x4000>,   // DEV2G5_24
+			      <6 0x10438000 0x4000>,   // DEV2G5_25
+			      <6 0x1043c000 0x4000>,   // DEV2G5_26
+			      <6 0x10440000 0x4000>,   // DEV2G5_27
+			      <6 0x10444000 0x4000>,   // DEV2G5_28
+			      <6 0x10448000 0x4000>,   // DEV2G5_29
+			      <6 0x1044c000 0x4000>,   // DEV2G5_30
+			      <6 0x10450000 0x4000>,   // DEV2G5_31
+			      <6 0x100b4000 0x4000>,   // DEV2G5_32
+			      <6 0x100b8000 0x4000>,   // DEV2G5_33
+			      <6 0x100bc000 0x4000>,   // DEV2G5_34
+			      <6 0x100c0000 0x4000>,   // DEV2G5_35
+			      <6 0x100c4000 0x4000>,   // DEV2G5_36
+			      <6 0x100c8000 0x4000>,   // DEV2G5_37
+			      <6 0x100cc000 0x4000>,   // DEV2G5_38
+			      <6 0x100d0000 0x4000>,   // DEV2G5_39
+			      <6 0x100d4000 0x4000>,   // DEV2G5_40
+			      <6 0x100d8000 0x4000>,   // DEV2G5_41
+			      <6 0x100dc000 0x4000>,   // DEV2G5_42
+			      <6 0x100e0000 0x4000>,   // DEV2G5_43
+			      <6 0x100e4000 0x4000>,   // DEV2G5_44
+			      <6 0x100e8000 0x4000>,   // DEV2G5_45
+			      <6 0x100ec000 0x4000>,   // DEV2G5_46
+			      <6 0x100f0000 0x4000>,   // DEV2G5_47
+			      <6 0x10454000 0x4000>,   // DEV2G5_48
+			      <6 0x10460000 0x4000>,   // DEV2G5_49
+			      <6 0x1046c000 0x4000>,   // DEV2G5_50
+			      <6 0x10478000 0x4000>,   // DEV2G5_51
+			      <6 0x10484000 0x4000>,   // DEV2G5_52
+			      <6 0x10490000 0x4000>,   // DEV2G5_53
+			      <6 0x1049c000 0x4000>,   // DEV2G5_54
+			      <6 0x104a8000 0x4000>,   // DEV2G5_55
+			      <6 0x104b4000 0x4000>,   // DEV2G5_56
+			      <6 0x100f4000 0x4000>,   // DEV2G5_57
+			      <6 0x104c4000 0x4000>,   // DEV2G5_58
+			      <6 0x10104000 0x4000>,   // DEV2G5_59
+			      <6 0x10114000 0x4000>,   // DEV2G5_60
+			      <6 0x104d4000 0x4000>,   // DEV2G5_61
+			      <6 0x104e4000 0x4000>,   // DEV2G5_62
+			      <6 0x104f4000 0x4000>,   // DEV2G5_63
+			      <6 0x10124000 0x4000>,   // DEV2G5_64
+			      <6 0x11900000 0x100000>, // ANA_AC
+			      <6 0x11400000 0x100000>, // ANA_CL
+			      <6 0x11800000 0x100000>, // ANA_L2
+			      <6 0x11480000 0x100000>, // ANA_L3
+			      <6 0x10600000 0x10000>,  // ASM
+			      <6 0x11060000 0x10000>,  // LRN
+			      <6 0x110b0000 0x10000>,  // QFWD
+			      <6 0x11030000 0x20000>,  // DEVCPU_QS
+			      <6 0x110a0000 0x10000>,  // QSYS
+			      <6 0x11600000 0x80000>,  // REW
+			      <6 0x11a00000 0x80000>,  // VOP
+			      <6 0x10504000 0x80000>,  // DSM
+			      <6 0x112c0000 0x80000>,  // EACL
+			      <6 0x11080000 0x80000>,  // VCAP_SUPER
+			      <6 0x11580000 0x80000>,  // HSCH
+			      <6 0x10130000 0x10000>;  // PORT_CONF
+			reg-names = "port0", "port1", "port2", "port3",
+			      "port4", "port5", "port6", "port7", "port8",
+			      "port9", "port10", "port11", "port12", "port13",
+			      "port14", "port15", "port16", "port17", "port18",
+			      "port19", "port20", "port21", "port22", "port23",
+			      "port24", "port25", "port26", "port27", "port28",
+			      "port29", "port30", "port31", "port32", "port33",
+			      "port34",	"port35", "port36", "port37", "port38",
+			      "port39", "port40", "port41", "port42", "port43",
+			      "port44", "port45", "port46", "port47", "port48",
+			      "port49", "port50", "port51", "port52", "port53",
+			      "port54", "port55", "port56", "port57", "port58",
+			      "port59", "port60", "port61", "port62", "port63",
+			      "port64",
+			      "ana_ac", "ana_cl",
+			      "ana_l2", "ana_l3", "asm", "lrn", "qfwd",
+			      "qs", "qsys", "rew",
+			      "vop", "dsm", "eacl", "vcap_super",
+			      "hsch", "port_conf";
+
+			ethernet-ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+		};
+
+		mdio0: mdio@6110102b0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "mscc,fireant-miim";
+			reg = <6 0x110102b0 0x24>;
+			status = "disabled";
+		};
+
+		mdio1: mdio@110102d4 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "mscc,fireant-miim";
+			reg = <6 0x110102d4 0x24>;
+			status = "disabled";
+		};
+
+		mdio2: mdio@6110102f8 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "mscc,fireant-miim";
+			reg = <6 0x110102f8 0x24>;
+			status = "disabled";
+		};
+
+		mdio3: mdio@61101031c {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "mscc,fireant-miim";
+			reg = <6 0x1101031c 0x24>;
+			status = "disabled";
+		};
+	};
+};

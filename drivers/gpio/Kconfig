@@ -111,7 +111,7 @@ config LPC32XX_GPIO
 
 config MSCC_SGPIO
 	bool "Microsemi Serial GPIO driver"
-	depends on DM_GPIO && SOC_VCOREIII
+	depends on DM_GPIO && (SOC_VCOREIII || TARGET_FIREANT)
 	help
 	  Support for the VCoreIII SoC serial GPIO device. By using a
           serial interface, the SIO controller significantly extends

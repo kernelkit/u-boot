@@ -7,6 +7,7 @@
  */
 
 #ifndef USE_HOSTCC
+#include <linux/kconfig.h>
 #include <common.h>
 #include <env.h>
 #include <watchdog.h>
@@ -18,6 +19,7 @@
 #include <rtc.h>
 
 #include <gzip.h>
+#include <linux/xz.h>
 #include <image.h>
 #include <mapmem.h>
 
@@ -187,6 +189,7 @@ static const table_entry_t uimage_comp[] = {
 	{	IH_COMP_LZMA,	"lzma",		"lzma compressed",	},
 	{	IH_COMP_LZO,	"lzo",		"lzo compressed",	},
 	{	IH_COMP_LZ4,	"lz4",		"lz4 compressed",	},
+	{	IH_COMP_XZ,	"xz",		"xz compressed",	},
 	{	-1,		"",		"",			},
 };
 
@@ -391,7 +394,7 @@ void image_print_contents(const void *ptr)
  * @comp_type:	Compression type being used (IH_COMP_...)
  * @is_xip:	true if the load address matches the image start
  */
-static void print_decomp_msg(int comp_type, int type, bool is_xip)
+void print_decomp_msg(int comp_type, int type, bool is_xip)
 {
 	const char *name = genimg_get_type_name(type);
 
@@ -474,6 +477,17 @@ int image_decomp(int comp, ulong load, ulong image_start, int type,
 		break;
 	}
 #endif /* CONFIG_LZ4 */
+#ifdef CONFIG_XZ
+	case IH_COMP_XZ: {
+		int in_used = unc_len;
+
+		ret = unxz(
+			(unsigned char *)image_start, image_len, 0, 0,
+			(unsigned char *)load, &in_used, puts);
+		image_len = in_used;
+		break;
+	}
+#endif /* CONFIG_XZ */
 	default:
 		printf("Unimplemented compression type %d\n", comp);
 		return -ENOSYS;

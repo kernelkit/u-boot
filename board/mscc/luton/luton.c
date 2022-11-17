@@ -7,6 +7,7 @@
 #include <asm/io.h>
 #include <led.h>
 #include <miiphy.h>
+#include <env.h>
 
 enum {
 	BOARD_TYPE_PCB090 = 0xAABBCD00,
@@ -79,3 +80,20 @@ int embedded_dtb_select(void)
 	return 0;
 }
 #endif
+
+int board_late_init(void)
+{
+	if (env_get("pcb"))
+		return 0;	/* Overridden, it seems */
+	switch (gd->board_type) {
+	case BOARD_TYPE_PCB090:
+		env_set("pcb", "pcb090");
+		break;
+	case BOARD_TYPE_PCB091:
+		env_set("pcb", "pcb091");
+		break;
+	default:
+		env_set("pcb", "unknown");
+	}
+	return 0;
+}

@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2019 Microsemi Corporation
+ */
+
+/dts-v1/;
+#include "mscc,fireant.dtsi"
+
+/ {
+	gpio-leds {
+		compatible = "gpio-leds";
+
+		status_green {
+			label = "green:status";
+			gpios = <&gpio 12 0>;
+			default-state = "on";
+		};
+
+		status_red {
+			label = "red:status";
+			gpios = <&gpio 13 0>;
+			default-state = "off";
+		};
+	};
+};
+
+&uart0 {
+        status = "okay";
+};
+
+&spi0 {
+	status = "okay";
+	spi-flash@0 {
+		compatible = "jedec,spi-nor";
+		spi-max-frequency = <8000000>; /* Max NOR speed */
+		reg = <0>; /* CS0 */
+	};
+};

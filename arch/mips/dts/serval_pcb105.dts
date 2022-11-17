@@ -25,13 +25,13 @@
 
 		status_green {
 			label = "pcb105:green:status";
-			gpios = <&sgpio 43 1>; /* p11.1 */
+			gpios = <&sgpio 11 1>; /* p11.0 */
 			default-state = "on";
 		};
 
 		status_red {
 			label = "pcb105:red:status";
-			gpios = <&sgpio 11 1>; /* p11.0 */
+			gpios = <&sgpio 43 1>; /* p11.1 */
 			default-state = "off";
 		};
 	};
@@ -53,7 +53,7 @@
 
 &sgpio {
 	status = "okay";
-	sgpio-ports = <0x00FFFFFF>;
+	mscc,sgpio-ports = <0x00FFFFFF>;
 };
 
 &mdio1 {

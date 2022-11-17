@@ -13,6 +13,7 @@
 #include <linux/module.h>
 #endif
 #include <linux/mtd/nand.h>
+#include <linux/bitops.h>
 
 /**
  * nanddev_isbad() - Check if a block is bad

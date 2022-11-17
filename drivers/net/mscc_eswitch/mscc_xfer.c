@@ -82,7 +82,7 @@ int mscc_recv(void __iomem *regs, const unsigned long *mscc_qs_offset,
 			debug("%d NOT_READY...?\n", byte_cnt);
 			break;
 		case XTR_ABORT:
-			*rxbuf = readl(regs + mscc_qs_offset[MSCC_QS_XTR_RD]);
+			/* No accompanying data */
 			abort_flag = true;
 			eof_flag = true;
 			debug("XTR_ABORT\n");
@@ -91,10 +91,12 @@ int mscc_recv(void __iomem *regs, const unsigned long *mscc_qs_offset,
 		case XTR_EOF_1:
 		case XTR_EOF_2:
 		case XTR_EOF_3:
-			byte_cnt += XTR_VALID_BYTES(val);
-			*rxbuf = readl(regs + mscc_qs_offset[MSCC_QS_XTR_RD]);
+			/* This assumes STATUS_WORD_POS == 1, Status
+			 * just after last data */
+			byte_cnt -= (4 - XTR_VALID_BYTES(val));
 			eof_flag = true;
-			debug("EOF\n");
+			debug("EOF (total %d, last %d)\n",
+			      byte_cnt, XTR_VALID_BYTES(val));
 			break;
 		case XTR_PRUNED:
 			/* But get the last 4 bytes as well */

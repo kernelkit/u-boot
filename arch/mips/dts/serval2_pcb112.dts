@@ -52,12 +52,12 @@
 
 &sgpio {
 	status = "okay";
-	sgpio-ports = <0x0000ffff>;
+	mscc,sgpio-ports = <0x0000ffff>;
 };
 
 &sgpio2 {
 	status = "okay";
-	sgpio-ports = <0x3fe0ffff>;
+	mscc,sgpio-ports = <0x3fe0ffff>;
 };
 
 &mdio0 {

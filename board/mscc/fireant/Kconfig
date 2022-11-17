@@ -1,0 +1,19 @@
+
+if TARGET_FIREANT
+
+config SYS_BOARD
+	default "fireant"
+
+config SYS_VENDOR
+	default "mscc"
+
+config SYS_SOC
+	default "fireant"
+
+config SYS_CONFIG_NAME
+	default "fireant"
+
+config SYS_TEXT_BASE
+	default 0x35000000
+
+endif

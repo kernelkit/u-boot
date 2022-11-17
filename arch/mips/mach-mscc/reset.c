@@ -28,16 +28,13 @@ void _machine_restart(void)
 	       ICPU_RESET_CORE_RST_FORCE,
 	       BASE_CFG + ICPU_RESET);
 #elif defined(CONFIG_SOC_SERVAL)
-	register unsigned long i;
-
 	/* Prevent VCore-III from being reset with a global reset */
 	writel(ICPU_RESET_CORE_RST_PROTECT, BASE_CFG + ICPU_RESET);
 
 	/* Do global reset */
 	writel(PERF_SOFT_RST_SOFT_CHIP_RST, BASE_DEVCPU_GCB + PERF_SOFT_RST);
 
-	for (i = 0; i < 2000; i++)
-		;
+	mdelay(100);
 
 	/* Power down DDR for clean DDR re-training */
 	writel(readl(BASE_CFG + ICPU_MEMCTRL_CTRL) |

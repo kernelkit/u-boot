@@ -27,6 +27,8 @@
 
 #define ANA_AC_RAM_CTRL_RAM_INIT		0x14fdc
 #define ANA_AC_STAT_GLOBAL_CFG_PORT_RESET	0x15474
+#define ANA_AC_SRC_CFG1(x)			(0x14f80 + 0x4 * (x))
+#define ANA_AC_SRC_CFG2(x)			(0x14f84 + 0x4 * (x))
 
 #define ANA_CL_PORT_VLAN_CFG(x)			(0xa018 + 0xc8 * (x))
 #define		ANA_CL_PORT_VLAN_CFG_AWARE_ENA			BIT(19)
@@ -265,6 +267,16 @@ static int servalt_initialize(struct servalt_private *priv)
 
 	servalt_switch_config(priv);
 
+	/*
+	 * Disable port-to-port by switching
+	 * Put front ports in "port isolation modes" - i.e. they can't send
+	 * to other ports - via the PGID sorce masks.
+	 */
+	for (i = 0; i < MAX_PORT; i++) {
+		writel(0, priv->regs[ANA_AC] + ANA_AC_SRC_CFG1(i));
+		writel(0, priv->regs[ANA_AC] + ANA_AC_SRC_CFG2(i));
+	}
+
 	for (i = 0; i < MAX_PORT; i++)
 		servalt_port_init(priv, i);
 
@@ -465,13 +477,15 @@ static int servalt_probe(struct udevice *dev)
 		addr_size = res.end - res.start;
 
 		/* If the bus is new then create a new bus */
-		if (!get_mdiobus(addr_base, addr_size))
-			priv->bus[miim_count] =
-				mscc_mdiobus_init(miim, &miim_count, addr_base,
-						  addr_size);
-
-		/* Connect mdio bus with the port */
 		bus = get_mdiobus(addr_base, addr_size);
+		if (!bus) {
+			bus = mscc_mdiobus_init(miim, miim_count, addr_base,
+						addr_size);
+			if (!bus)
+				return -ENOMEM;
+			priv->bus[miim_count++] = bus;
+		}
+
 		add_port_entry(priv, i, phy_addr, bus);
 	}
 

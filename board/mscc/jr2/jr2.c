@@ -7,6 +7,7 @@
 #include <asm/io.h>
 #include <led.h>
 #include <miiphy.h>
+#include <env.h>
 
 enum {
 	BOARD_TYPE_PCB110 = 0xAABBCE00,
@@ -32,39 +33,6 @@ int board_early_init_r(void)
 	return 0;
 }
 
-static void vcoreiii_gpio_set_alternate(int gpio, int mode)
-{
-	u32 mask;
-	u32 val0, val1;
-	void __iomem *reg0, *reg1;
-
-	if (gpio < 32) {
-		mask = BIT(gpio);
-		reg0 = BASE_DEVCPU_GCB + GPIO_GPIO_ALT(0);
-		reg1 = BASE_DEVCPU_GCB + GPIO_GPIO_ALT(1);
-	} else {
-		gpio -= 32;
-		mask = BIT(gpio);
-		reg0 = BASE_DEVCPU_GCB + GPIO_GPIO_ALT1(0);
-		reg1 = BASE_DEVCPU_GCB + GPIO_GPIO_ALT1(1);
-	}
-	val0 = readl(reg0);
-	val1 = readl(reg1);
-	if (mode == 1) {
-		writel(val0 | mask, reg0);
-		writel(val1 & ~mask, reg1);
-	} else if (mode == 2) {
-		writel(val0 & ~mask, reg0);
-		writel(val1 | mask, reg1);
-	} else if (mode == 3) {
-		writel(val0 | mask, reg0);
-		writel(val1 | mask, reg1);
-	} else {
-		writel(val0 & ~mask, reg0);
-		writel(val1 & ~mask, reg1);
-	}
-}
-
 int board_phy_config(struct phy_device *phydev)
 {
 	if (gd->board_type == BOARD_TYPE_PCB110 ||
@@ -87,6 +55,39 @@ int board_phy_config(struct phy_device *phydev)
 	return 0;
 }
 
+void vcoreiii_gpio_set_alternate(int gpio, int mode)
+{
+	u32 mask;
+	u32 val0, val1;
+	void __iomem *reg0, *reg1;
+
+	if (gpio < 32) {
+		mask = BIT(gpio);
+		reg0 = BASE_DEVCPU_GCB + GPIO_ALT(0);
+		reg1 = BASE_DEVCPU_GCB + GPIO_ALT(1);
+	} else {
+		gpio -= 32;
+		mask = BIT(gpio);
+		reg0 = BASE_DEVCPU_GCB + GPIO_ALT1(0);
+		reg1 = BASE_DEVCPU_GCB + GPIO_ALT1(1);
+	}
+	val0 = readl(reg0);
+	val1 = readl(reg1);
+	if (mode == 1) {
+		writel(val0 | mask, reg0);
+		writel(val1 & ~mask, reg1);
+	} else if (mode == 2) {
+		writel(val0 & ~mask, reg0);
+		writel(val1 | mask, reg1);
+	} else if (mode == 3) {
+		writel(val0 | mask, reg0);
+		writel(val1 | mask, reg1);
+	} else {
+		writel(val0 & ~mask, reg0);
+		writel(val1 & ~mask, reg1);
+	}
+}
+
 void board_debug_uart_init(void)
 {
 	/* too early for the pinctrl driver, so configure the UART pins here */
@@ -101,7 +102,7 @@ static void do_board_detect(void)
 
 	/* MIIM 1 + 2  MDC/MDIO */
 	for (i = 56; i < 60; i++)
-		vcoreiii_gpio_set_alternate(i, 1);
+		mscc_gpio_set_alternate(i, 1);
 
 	/* small delay for settling the pins */
 	mdelay(30);
@@ -146,3 +147,23 @@ int embedded_dtb_select(void)
 	return 0;
 }
 #endif
+
+int board_late_init(void)
+{
+	if (env_get("pcb"))
+		return 0;	/* Overridden, it seems */
+	switch (gd->board_type) {
+	case BOARD_TYPE_PCB110:
+		env_set("pcb", "pcb110");
+		break;
+	case BOARD_TYPE_PCB111:
+		env_set("pcb", "pcb111");
+		break;
+	case BOARD_TYPE_PCB112:
+		env_set("pcb", "pcb112");
+		break;
+	default:
+		env_set("pcb", "unknown");
+	}
+	return 0;
+}

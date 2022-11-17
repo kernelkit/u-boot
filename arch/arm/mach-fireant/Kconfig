@@ -1,0 +1,52 @@
+choice
+	prompt "FireAnt DDR type"
+
+config DDR_FIREANT_PCB125
+	bool "FireAnt Modular board, 4Gb"
+
+config DDR_FIREANT_PCB134
+	bool "FireAnt Reference Board PCB134"
+
+config DDR_FIREANT_PCB135
+	bool "FireAnt Reference Board PCB135"
+
+endchoice
+
+config SYS_SDRAM_SIZE
+        hex "Size of SDRAM"
+	default 0x80000000
+
+config DDR_FIREANT_CLK_DIV
+        int
+	default 8 if DDR_FIREANT_PCB125
+	default 8 if DDR_FIREANT_PCB134
+	default 6 if DDR_FIREANT_PCB135
+	help
+	 FireAnt DDR speed clock divisor:
+		4: 625MHz
+		5: 500MHz
+		6: 416.667MHz
+		8: 312.5MHz
+		10: 250MHz
+		12: 208.33MHz
+		16: 156.25MHz
+		20: 125MHz"
+
+config DDR_FIREANT_16BIT
+	bool "Enable 16 bit DDR interfaces"
+	default n
+	help
+	 This forces a 16bit DDR interface. This option is provided
+	 only for test purposes with the normal DDR types used. When
+	 used with proper DDR configuration files for real 16bit
+	 devices, this option should be disabled. When used, the DDR
+	 memory size must typically be reduced to half the actuak
+	 size. This option also forces disabling of ECC.
+
+config FIREANT_SYMREG
+	bool "Enable symbolic register access"
+	default n
+
+config TARGET_FIREANT_REAL
+	bool "FireAnt raw metal"
+	default y

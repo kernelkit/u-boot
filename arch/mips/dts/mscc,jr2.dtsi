@@ -234,6 +234,11 @@
 			      <0x01310000 0x0100>,   // VTSS_TO_DEV_45
 			      <0x01320000 0x0100>,   // VTSS_TO_DEV_46
 			      <0x01330000 0x0100>,   // VTSS_TO_DEV_47
+			      <0x01340000 0x0100>,   // VTSS_TO_DEV_48(NPI)
+			      <0x01350000 0x0100>,   // VTSS_TO_DEV_49
+			      <0x01360000 0x0100>,   // VTSS_TO_DEV_50
+			      <0x01370000 0x0100>,   // VTSS_TO_DEV_51
+			      <0x01380000 0x0100>,   // VTSS_TO_DEV_52
 			      <0x01f00000 0x100000>, // ANA_AC
 			      <0x01d00000 0x100000>, // ANA_CL
 			      <0x01e00000 0x100000>, // ANA_L2
@@ -243,7 +248,17 @@
 			      <0x017d0000 0x10000>,  // QFWD
 			      <0x01020000 0x20000>,  // QS
 			      <0x017e0000 0x10000>,  // QSYS
-			      <0x01b00000 0x80000>;  // REW
+			      <0x01b00000 0x80000>,  // REW
+			      <0x01010000 0x100>,    // GCB
+			      <0x00000000 0x100>,    // ICPU
+			      <0x01480000 0x100>,    // XGANA_0
+			      <0x01490000 0x100>,    // XGANA_1
+			      <0x014A0000 0x100>,    // XGANA_2
+			      <0x014B0000 0x100>,    // XGANA_3
+			      <0x01500000 0x100>,    // XGXFI_0
+			      <0x01510000 0x100>,    // XGXFI_1
+			      <0x01520000 0x100>,    // XGXFI_2
+			      <0x01530000 0x100>;    // XGXFI_3
 			reg-names = "port0", "port1", "port2", "port3", "port4",
 				    "port5", "port6", "port7", "port8", "port9",
 				    "port10", "port11", "port12", "port13",
@@ -255,9 +270,12 @@
 				    "port34", "port35", "port36", "port37",
 				    "port38", "port39", "port40", "port41",
 				    "port42", "port43", "port44", "port45",
-				    "port46", "port47", "ana_ac", "ana_cl",
-				    "ana_l2", "asm", "hsio", "lrn", "qfwd",
-				    "qs", "qsys", "rew";
+				    "port46", "port47", "port48", "port49",
+				    "port50", "port51", "port52", "ana_ac",
+				    "ana_cl", "ana_l2", "asm", "hsio", "lrn",
+				    "qfwd", "qs", "qsys", "rew", "gcb", "icpu",
+				    "xgana0", "xgana1", "xgana2", "xgana3",
+				    "xgxfi0", "xgxfi1", "xgxfi2", "xgxfi3";
 			status = "okay";
 
 			ethernet-ports {

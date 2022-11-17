@@ -29,6 +29,7 @@ config SOC_OCELOT
 config SOC_LUTON
 	bool "Luton SOC Family"
 	select SOC_VCOREIII
+	select MSCC_BB_SPI
 	help
 	  This supports MSCC Luton family of SOCs.
 

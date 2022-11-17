@@ -211,7 +211,8 @@ static void ocelot_cpu_capture_setup(struct ocelot_private *priv)
 		 * Do byte-swap and expect status after last data word
 		 * Extraction: Mode: manual extraction) | Byte_swap
 		 */
-		writel(QS_XTR_GRP_CFG_MODE(1) | QS_XTR_GRP_CFG_BYTE_SWAP,
+		writel(QS_XTR_GRP_CFG_MODE(1) | QS_XTR_GRP_CFG_BYTE_SWAP |
+		       QS_XTR_GRP_CFG_STATUS_WORD_POS,
 		       priv->regs[QS] + QS_XTR_GRP_CFG(i));
 		/*
 		 * Injection: Mode: manual extraction | Byte_swap
@@ -581,13 +582,14 @@ static int ocelot_probe(struct udevice *dev)
 		addr_size = res.end - res.start;
 
 		/* If the bus is new then create a new bus */
-		if (!get_mdiobus(addr_base, addr_size))
-			priv->bus[miim_count] =
-				mscc_mdiobus_init(miim, &miim_count, addr_base,
-						  addr_size);
-
-		/* Connect mdio bus with the port */
 		bus = get_mdiobus(addr_base, addr_size);
+		if (!bus) {
+			bus = mscc_mdiobus_init(miim, miim_count, addr_base,
+						addr_size);
+			if (!bus)
+				return -ENOMEM;
+			priv->bus[miim_count++] = bus;
+		}
 
 		/* Get serdes info */
 		ret = ofnode_parse_phandle_with_args(node, "phys", NULL,

@@ -6,10 +6,18 @@
 #include <common.h>
 #include <asm/io.h>
 #include <led.h>
+#include <env.h>
 
 enum {
 	BOARD_TYPE_PCB116 = 0xAABBCE00,
 };
+
+void board_debug_uart_init(void)
+{
+	/* too early for the pinctrl driver, so configure the UART pins here */
+	mscc_gpio_set_alternate(6, 1);
+	mscc_gpio_set_alternate(7, 1);
+}
 
 int board_early_init_r(void)
 {
@@ -50,3 +58,17 @@ int embedded_dtb_select(void)
 	return 0;
 }
 #endif
+
+int board_late_init(void)
+{
+	if (env_get("pcb"))
+		return 0;	/* Overridden, it seems */
+	switch (gd->board_type) {
+	case BOARD_TYPE_PCB116:
+		env_set("pcb", "pcb116");
+		break;
+	default:
+		env_set("pcb", "unknown");
+	}
+	return 0;
+}

@@ -6,3 +6,4 @@ obj-$(CONFIG_PINCTRL_MSCC_LUTON) += pinctrl-luton.o
 obj-$(CONFIG_PINCTRL_MSCC_JR2) += pinctrl-jr2.o
 obj-$(CONFIG_PINCTRL_MSCC_SERVALT) += pinctrl-servalt.o
 obj-$(CONFIG_PINCTRL_MSCC_SERVAL) += pinctrl-serval.o
+obj-$(CONFIG_PINCTRL_MSCC_FIREANT) += pinctrl-fireant.o

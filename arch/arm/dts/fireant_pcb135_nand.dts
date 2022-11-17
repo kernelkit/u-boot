@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2018 Microsemi Corporation
+ */
+
+/dts-v1/;
+#include "mscc,fireant_pcb135.dtsi"
+#include "mscc,fireant_nand.dtsi"
+
+/ {
+	model = "FireAnt PCB135/NAND Reference Board";
+	compatible = "mscc,fireant-pcb135", "mscc,fireant";
+};

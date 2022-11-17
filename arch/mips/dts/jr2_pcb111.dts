@@ -60,18 +60,26 @@
 
 &sgpio {
 	status = "okay";
-	sgpio-ports = <0xffffffff>;
+	mscc,sgpio-ports = <0xffffffff>;
 };
 
 &sgpio1 {
 	status = "okay";
-	sgpio-ports = <0x001effff>;
+	mscc,sgpio-ports = <0x001effff>;
 };
 
 &sgpio2 {
 	status = "okay";
-	sgpio-ports = <0xff000000>;
+	mscc,sgpio-ports = <0xff000000>;
 	gpio-ranges = <&sgpio2 0 0 96>;
+};
+
+&mdio0 {
+	status = "okay";
+
+	phy48: ethernet-phy@48 {
+		reg = <28>;
+	};
 };
 
 &mdio1 {
@@ -469,6 +477,11 @@
 			reg = <47>;
 			phy-handle = <&phy47>;
 			phys = <&serdes_hsio 47 0xff PHY_MODE_QSGMII>;
+		};
+		port48: port@48 {
+			reg = <48>;
+			phy-handle = <&phy47>;
+			phys = <&serdes_hsio 48 SERDES1G(0) PHY_MODE_SGMII>;
 		};
 	};
 };

@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2018 Microsemi Corporation
+ */
+
+/dts-v1/;
+#include "mscc,fireant_pcb.dtsi"
+#include <dt-bindings/mscc/fireant_data.h>
+
+&gpio {
+	miim3_pins: miim3-pins {
+		pins = "GPIO_52", "GPIO_53";
+		function = "miim3";
+	};
+};
+
+&mdio3 {
+	status = "okay";
+	pinctrl-0 = <&miim3_pins>;
+	pinctrl-names = "default";
+	phy0: ethernet-phy@28 {
+		reg = <28>;
+	};
+};
+
+&switch {
+	status = "okay";
+	ethernet-ports {
+		port4: port@64 {
+			reg = <64>;
+			phy-handle = <&phy0>;
+			phys = <IF_SGMII FA_SERDES_TYPE_6G 0>; // type serdes serdes#
+		};
+	};
+};

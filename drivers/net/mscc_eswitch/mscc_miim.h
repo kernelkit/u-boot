@@ -16,9 +16,10 @@ struct mscc_miim_dev {
 int mscc_miim_read(struct mii_dev *bus, int addr, int devad, int reg);
 int mscc_miim_write(struct mii_dev *bus, int addr, int devad, int reg, u16 val);
 
-struct mii_dev *mscc_mdiobus_init(struct mscc_miim_dev *miim, int *miim_count,
+struct mii_dev *mscc_mdiobus_init(struct mscc_miim_dev *miim, int miim_index,
 				  phys_addr_t miim_base,
 				  unsigned long miim_size);
 
+int mscc_mdiobus_pinctrl_apply(ofnode miim_node);
 
 #endif /* _MSCC_MIIM_H_ */

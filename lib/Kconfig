@@ -385,6 +385,11 @@ config GZIP
 	help
 	  This enables support for GZIP compression algorithm.
 
+config XZ
+	bool "Enable XZ(LZMA2) decompression support"
+	help
+	  This enables support for XZ (aka LZMA2)
+
 config ZLIB
 	bool
 	default y

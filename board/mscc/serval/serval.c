@@ -7,11 +7,19 @@
 #include <asm/io.h>
 #include <led.h>
 #include <miiphy.h>
+#include <env.h>
 
 enum {
 	BOARD_TYPE_PCB106 = 0xAABBCD00,
 	BOARD_TYPE_PCB105,
 };
+
+void board_debug_uart_init(void)
+{
+	/* too early for the pinctrl driver, so configure the UART pins here */
+	mscc_gpio_set_alternate(26, 1);
+	mscc_gpio_set_alternate(27, 1);
+}
 
 int board_early_init_r(void)
 {
@@ -84,3 +92,20 @@ int embedded_dtb_select(void)
 	return 0;
 }
 #endif
+
+int board_late_init(void)
+{
+	if (env_get("pcb"))
+		return 0;	/* Overridden, it seems */
+	switch (gd->board_type) {
+	case BOARD_TYPE_PCB105:
+		env_set("pcb", "pcb105");
+		break;
+	case BOARD_TYPE_PCB106:
+		env_set("pcb", "pcb106");
+		break;
+	default:
+		env_set("pcb", "unknown");
+	}
+	return 0;
+}

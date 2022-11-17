@@ -52,7 +52,7 @@
 
 &sgpio {
 	status = "okay";
-	sgpio-ports = <0x0000fe7f>;
+	mscc,sgpio-ports = <0x0000fe7f>;
 };
 
 &mdio0 {

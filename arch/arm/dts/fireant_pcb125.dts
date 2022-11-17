@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2018 Microsemi Corporation
+ */
+
+/dts-v1/;
+#include "mscc,fireant_pcb.dtsi"
+
+/ {
+	model = "FireAnt PCB125 Reference Board";
+	compatible = "mscc,fireant-pcb125", "mscc,fireant";
+};

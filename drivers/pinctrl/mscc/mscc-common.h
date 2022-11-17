@@ -7,6 +7,8 @@
  * Copyright (c) 2017 Microsemi Corporation
  */
 
+#include <asm/gpio.h>
+
 #define MSCC_FUNC_PER_PIN	4
 
 enum mscc_regs_gpio {
@@ -48,7 +50,8 @@ struct mscc_pmx_func {
 struct mscc_pinctrl {
 	struct udevice *dev;
 	struct pinctrl_dev *pctl;
-	void __iomem *regs;
+	void __iomem *regs;	/* Enumerated regs */
+	void __iomem *regs_cfg;	/* GPIO config */
 	struct mscc_pmx_func *func;
 	int num_func;
 	const struct mscc_pin_data *mscc_pins;
@@ -61,6 +64,7 @@ int mscc_pinctrl_probe(struct udevice *dev, int num_func,
 		       const struct mscc_pin_data *mscc_pins, int num_pins,
 		       char * const *function_names,
 		       const unsigned long *mscc_gpios);
-const struct pinctrl_ops mscc_pinctrl_ops;
 
-const struct dm_gpio_ops mscc_gpio_ops;
+extern const struct pinctrl_ops mscc_pinctrl_ops;
+
+extern const struct dm_gpio_ops mscc_gpio_ops;

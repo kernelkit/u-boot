@@ -36,3 +36,10 @@ config MSCC_SERVAL_SWITCH
 	select PHYLIB
 	help
 	  This driver supports the Serval network switch device.
+
+config MSCC_FIREANT_SWITCH
+	bool "Fireant switch driver"
+	depends on DM_ETH && TARGET_FIREANT
+	select PHYLIB
+	help
+	  This driver supports the Fireant network switch device.

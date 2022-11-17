@@ -3,7 +3,6 @@
  * (C) Copyright 2003
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
  */
-
 #include <common.h>
 #include <env.h>
 #include <image.h>
@@ -45,22 +44,38 @@ void arch_lmb_reserve(struct lmb *lmb)
 	lmb_reserve(lmb, sp, gd->ram_top - sp);
 }
 
-static void linux_cmdline_init(void)
+static void linux_cmdline_init(int vcoreiii)
 {
+	if (!vcoreiii) {
+		linux_argv = (char **)UNCACHED_SDRAM(gd->bd->bi_boot_params);
+		linux_argp = (char *)(linux_argv + LINUX_MAX_ARGS);
+	} else {
+		/*
+		 * Vcore III linux kernels expect arguments in the cached
+		 * address space. They also expect the command line being a
+		 * single string in the first argument
+		 */
+		linux_argv = (char **)(gd->bd->bi_boot_params);
+		linux_argp = (char *)(linux_argv + LINUX_MAX_ARGS);
+		linux_argv[1] = linux_argp;
+	}
 	linux_argc = 1;
-	linux_argv = (char **)UNCACHED_SDRAM(gd->bd->bi_boot_params);
 	linux_argv[0] = 0;
-	linux_argp = (char *)(linux_argv + LINUX_MAX_ARGS);
 }
 
-static void linux_cmdline_set(const char *value, size_t len)
+static void linux_cmdline_set(const char *value, size_t len, int vcoreiii)
 {
-	linux_argv[linux_argc] = linux_argp;
 	memcpy(linux_argp, value, len);
-	linux_argp[len] = 0;
-
+	if (!vcoreiii)	{
+		linux_argv[linux_argc] = linux_argp;
+		linux_argp[len] = 0;
+		linux_argc++;
+	} else {
+		linux_argp[len] = ' ';
+		linux_argp[len + 1] = 0;
+		linux_argc = 2;
+	}
 	linux_argp += len + 1;
-	linux_argc++;
 }
 
 static void linux_cmdline_dump(void)
@@ -74,12 +89,10 @@ static void linux_cmdline_dump(void)
 		debug("   arg %03d: %s\n", i, linux_argv[i]);
 }
 
-static void linux_cmdline_legacy(bootm_headers_t *images)
+static void linux_cmdline_legacy(bootm_headers_t *images, int vcoreiii)
 {
 	const char *bootargs, *next, *quote;
-
-	linux_cmdline_init();
-
+	linux_cmdline_init(vcoreiii);
 	bootargs = env_get("bootargs");
 	if (!bootargs)
 		return;
@@ -105,7 +118,7 @@ static void linux_cmdline_legacy(bootm_headers_t *images)
 		if (!next)
 			next = bootargs + strlen(bootargs);
 
-		linux_cmdline_set(bootargs, next - bootargs);
+		linux_cmdline_set(bootargs, next - bootargs, vcoreiii);
 
 		if (*next)
 			next++;
@@ -114,25 +127,48 @@ static void linux_cmdline_legacy(bootm_headers_t *images)
 	}
 }
 
-static void linux_cmdline_append(bootm_headers_t *images)
+static void linux_cmdline_append(bootm_headers_t *images, int vcoreiii)
 {
-	char buf[24];
+	char buf[512];
 	ulong mem, rd_start, rd_size;
 
+	/* New linux kernels need this command line argument and ignore the
+	 * environment arguments. Therfore detect if a mfi is boot not to
+	 * pass this one, because then ramload will not be able to reserve
+	 * memory
+	 */
 	/* append mem */
-	mem = gd->ram_size >> 20;
-	sprintf(buf, "mem=%luM", mem);
-	linux_cmdline_set(buf, strlen(buf));
+        if (env_get("boot_mfi") == NULL) {
+		mem = gd->ram_size >> 20;
+		sprintf(buf, "mem=%luM", mem);
+		linux_cmdline_set(buf, strlen(buf), vcoreiii);
+	} else {
+	    env_set("boot_mfi", "");
+	}
+
+	sprintf(buf, "rw ");
+	linux_cmdline_set(buf, strlen(buf), vcoreiii);
 
 	/* append rd_start and rd_size */
 	rd_start = images->initrd_start;
 	rd_size = images->initrd_end - images->initrd_start;
 
+	sprintf(buf, "%s", env_get("mtdparts"));
+	linux_cmdline_set(buf, strlen(buf), vcoreiii);
+
+	sprintf(buf, "fis_act=%s",
+		env_get("fis_act") ? env_get("fis_act") : "");
+	linux_cmdline_set(buf, strlen(buf), vcoreiii);
+
 	if (rd_size) {
 		sprintf(buf, "rd_start=0x%08lX", rd_start);
-		linux_cmdline_set(buf, strlen(buf));
-		sprintf(buf, "rd_size=0x%lX", rd_size);
-		linux_cmdline_set(buf, strlen(buf));
+		linux_cmdline_set(buf, strlen(buf), vcoreiii);
+		sprintf(buf, "rd_size=%ld", rd_size);
+		linux_cmdline_set(buf, strlen(buf), vcoreiii);
+		if (vcoreiii) {
+			sprintf(buf, "root=/dev/ram0");
+			linux_cmdline_set(buf, strlen(buf), vcoreiii);
+		}
 	}
 }
 
@@ -164,6 +200,7 @@ static void linux_env_set(const char *env_name, const char *env_val)
 
 		linux_env_p++;
 		linux_env[++linux_env_idx] = 0;
+		pr_err ("%s setting %s=%s\n", __func__, env_name, env_val);
 	}
 }
 
@@ -171,7 +208,6 @@ static void linux_env_legacy(bootm_headers_t *images)
 {
 	char env_buf[12];
 	const char *cp;
-	ulong rd_start, rd_size;
 
 	if (CONFIG_IS_ENABLED(MEMSIZE_IN_BYTES)) {
 		sprintf(env_buf, "%lu", (ulong)gd->ram_size);
@@ -183,22 +219,21 @@ static void linux_env_legacy(bootm_headers_t *images)
 		      (ulong)(gd->ram_size >> 20));
 	}
 
-	rd_start = UNCACHED_SDRAM(images->initrd_start);
-	rd_size = images->initrd_end - images->initrd_start;
-
 	linux_env_init();
 
 	linux_env_set("memsize", env_buf);
 
-	sprintf(env_buf, "0x%08lX", rd_start);
-	linux_env_set("initrd_start", env_buf);
-
-	sprintf(env_buf, "0x%lX", rd_size);
-	linux_env_set("initrd_size", env_buf);
+	if (env_get("fis_act") == NULL) {
+		unsigned long size = env_get_ulong("mmap_size", 10, 0);
+		if (size != 0) {
+			sprintf(env_buf, "%ld", (ulong)(size*1024*1024));
+			linux_env_set("memmap", env_buf);
+		}
+	}
 
 	sprintf(env_buf, "0x%08X", (uint) (gd->bd->bi_flashstart));
-	linux_env_set("flash_start", env_buf);
 
+	linux_env_set("flash_start", env_buf);
 	sprintf(env_buf, "0x%X", (uint) (gd->bd->bi_flashsize));
 	linux_env_set("flash_size", env_buf);
 
@@ -260,11 +295,15 @@ static void boot_prep_linux(bootm_headers_t *images)
 		boot_reloc_fdt(images);
 		boot_setup_fdt(images);
 	} else {
-		if (CONFIG_IS_ENABLED(MIPS_BOOT_CMDLINE_LEGACY)) {
-			linux_cmdline_legacy(images);
+		if (CONFIG_IS_ENABLED(SOC_VCOREIII)) {
+			linux_cmdline_legacy(images, 1);
+			linux_cmdline_append(images, 1);
+			linux_cmdline_dump();
+		} else if (CONFIG_IS_ENABLED(MIPS_BOOT_CMDLINE_LEGACY)) {
+			linux_cmdline_legacy(images, 0);
 
 			if (!CONFIG_IS_ENABLED(MIPS_BOOT_ENV_LEGACY))
-				linux_cmdline_append(images);
+				linux_cmdline_append(images, 0);
 
 			linux_cmdline_dump();
 		}
