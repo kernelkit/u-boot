@@ -9,6 +9,8 @@
 
 #include <stdbool.h>
 
+int blkmap_map_linear(int devnum, lbaint_t blknr, lbaint_t blkcnt,
+		      enum uclass_id lcls, int ldevnum, lbaint_t lblknr);
 int blkmap_map_mem(int devnum, lbaint_t blknr, lbaint_t blkcnt, void *addr);
 int blkmap_map_pmem(int devnum, lbaint_t blknr, lbaint_t blkcnt,
 		    phys_addr_t paddr);
