@@ -12,6 +12,7 @@
 #include <dm/lists.h>
 #include <dm/root.h>
 #include <malloc.h>
+#include <mapmem.h>
 #include <part.h>
 
 struct blkmap;
@@ -91,6 +92,111 @@ static int blkmap_add(struct blkmap *bm, struct blkmap_slice *new)
 	bms = list_last_entry(&bm->slices, struct blkmap_slice, node);
 	bd->lba = bms->blknr + bms->blkcnt;
 	return 0;
+}
+
+struct blkmap_mem {
+	struct blkmap_slice slice;
+	void *addr;
+	bool remapped;
+};
+
+static ulong blkmap_mem_read(struct blkmap *bm, struct blkmap_slice *bms,
+			     lbaint_t blknr, lbaint_t blkcnt, void *buffer)
+{
+	struct blkmap_mem *bmm = container_of(bms, struct blkmap_mem, slice);
+	struct blk_desc *bd = dev_get_uclass_plat(bm->dev);
+	char *src;
+
+	src = bmm->addr + (blknr << bd->log2blksz);
+	memcpy(buffer, src, blkcnt << bd->log2blksz);
+	return blkcnt;
+}
+
+static ulong blkmap_mem_write(struct blkmap *bm, struct blkmap_slice *bms,
+			      lbaint_t blknr, lbaint_t blkcnt,
+			      const void *buffer)
+{
+	struct blkmap_mem *bmm = container_of(bms, struct blkmap_mem, slice);
+	struct blk_desc *bd = dev_get_uclass_plat(bm->dev);
+	char *dst;
+
+	dst = bmm->addr + (blknr << bd->log2blksz);
+	memcpy(dst, buffer, blkcnt << bd->log2blksz);
+	return blkcnt;
+}
+
+static void blkmap_mem_destroy(struct blkmap *bm, struct blkmap_slice *bms)
+{
+	struct blkmap_mem *bmm = container_of(bms, struct blkmap_mem, slice);
+
+	if (bmm->remapped)
+		unmap_sysmem(bmm->addr);
+}
+
+int __blkmap_map_mem(int devnum, lbaint_t blknr, lbaint_t blkcnt, void *addr,
+		     bool remapped)
+{
+	struct blkmap_mem *bmm;
+	struct blkmap *bm;
+	int err;
+
+	bm = blkmap_from_devnum(devnum);
+	if (!bm)
+		return -ENODEV;
+
+	bmm = malloc(sizeof(*bmm));
+	if (!bmm)
+		return -ENOMEM;
+
+	*bmm = (struct blkmap_mem) {
+		.slice = {
+			.blknr = blknr,
+			.blkcnt = blkcnt,
+
+			.read = blkmap_mem_read,
+			.write = blkmap_mem_write,
+			.destroy = blkmap_mem_destroy,
+		},
+
+		.addr = addr,
+		.remapped = remapped,
+	};
+
+	err = blkmap_add(bm, &bmm->slice);
+	if (err)
+		free(bmm);
+
+	return err;
+}
+
+int blkmap_map_mem(int devnum, lbaint_t blknr, lbaint_t blkcnt, void *addr)
+{
+	return __blkmap_map_mem(devnum, blknr, blkcnt, addr, false);
+}
+
+int blkmap_map_pmem(int devnum, lbaint_t blknr, lbaint_t blkcnt,
+		    phys_addr_t paddr)
+{
+	struct blk_desc *bd;
+	struct blkmap *bm;
+	void *addr;
+	int err;
+
+	bm = blkmap_from_devnum(devnum);
+	if (!bm)
+		return -ENODEV;
+
+	bd = dev_get_uclass_plat(bm->dev);
+
+	addr = map_sysmem(paddr, blkcnt << bd->log2blksz);
+	if (!addr)
+		return -ENOMEM;
+
+	err = __blkmap_map_mem(devnum, blknr, blkcnt, addr, true);
+	if (err)
+		unmap_sysmem(addr);
+
+	return err;
 }
 
 static struct udevice *blkmap_root(void)
