@@ -95,6 +95,77 @@ static int blkmap_add(struct blkmap *bm, struct blkmap_slice *new)
 	return 0;
 }
 
+struct blkmap_linear {
+	struct blkmap_slice slice;
+
+	struct blk_desc *bd;
+	lbaint_t blknr;
+};
+
+static ulong blkmap_linear_read(struct blkmap *bm, struct blkmap_slice *bms,
+				lbaint_t blknr, lbaint_t blkcnt, void *buffer)
+{
+	struct blkmap_linear *bml = container_of(bms, struct blkmap_linear, slice);
+
+	return blk_dread(bml->bd, bml->blknr + blknr, blkcnt, buffer);
+}
+
+static ulong blkmap_linear_write(struct blkmap *bm, struct blkmap_slice *bms,
+				 lbaint_t blknr, lbaint_t blkcnt,
+				 const void *buffer)
+{
+	struct blkmap_linear *bml = container_of(bms, struct blkmap_linear, slice);
+
+	return blk_dwrite(bml->bd, bml->blknr + blknr, blkcnt, buffer);
+}
+
+int blkmap_map_linear(int devnum, lbaint_t blknr, lbaint_t blkcnt,
+		      enum uclass_id lcls, int ldevnum, lbaint_t lblknr)
+{
+	struct blkmap_linear *linear;
+	struct blk_desc *bd, *lbd;
+	struct blkmap *bm;
+	int err;
+
+	bm = blkmap_from_devnum(devnum);
+	if (!bm)
+		return -ENODEV;
+
+	bd = dev_get_uclass_plat(bm->dev);
+	lbd = blk_get_devnum_by_uclass_id(lcls, ldevnum);
+	if (!lbd)
+		return -ENODEV;
+
+	if (lbd->blksz != bd->blksz)
+		/* We could support block size translation, but we
+		 * don't yet.
+		 */
+		return -EINVAL;
+
+	linear = malloc(sizeof(*linear));
+	if (!linear)
+		return -ENOMEM;
+
+	*linear = (struct blkmap_linear) {
+		.slice = {
+			.blknr = blknr,
+			.blkcnt = blkcnt,
+
+			.read = blkmap_linear_read,
+			.write = blkmap_linear_write,
+		},
+
+		.bd = lbd,
+		.blknr = lblknr,
+	};
+
+	err = blkmap_add(bm, &linear->slice);
+	if (err)
+		free(linear);
+
+	return err;
+}
+
 struct blkmap_mem {
 	struct blkmap_slice slice;
 	void *addr;
