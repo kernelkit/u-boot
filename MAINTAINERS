@@ -792,6 +792,7 @@ S:	Maintained
 F:	cmd/blkmap.c
 F:	drivers/block/blkmap.c
 F:	include/blkmap.h
+F:	test/py/tests/test_blkmap.py
 
 BOOTDEVICE
 M:	Simon Glass <sjg@chromium.org>
