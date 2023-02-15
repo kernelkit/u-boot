@@ -9,13 +9,16 @@
 
 #include <stdbool.h>
 
-int blkmap_map_linear(int devnum, lbaint_t blknr, lbaint_t blkcnt,
+int blkmap_map_linear(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
 		      enum uclass_id lcls, int ldevnum, lbaint_t lblknr);
-int blkmap_map_mem(int devnum, lbaint_t blknr, lbaint_t blkcnt, void *addr);
-int blkmap_map_pmem(int devnum, lbaint_t blknr, lbaint_t blkcnt,
+int blkmap_map_mem(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
+		   void *addr);
+int blkmap_map_pmem(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
 		    phys_addr_t paddr);
 
-int blkmap_create(int devnum);
-int blkmap_destroy(int devnum);
+
+struct udevice *blkmap_from_label(const char *label);
+int blkmap_create(const char *label, struct udevice **devp);
+int blkmap_destroy(struct udevice *dev);
 
 #endif	/* _BLKMAP_H */

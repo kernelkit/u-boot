@@ -31,7 +31,8 @@ struct blkmap_slice {
 };
 
 struct blkmap {
-	struct udevice *dev;
+	char *label;
+	struct blk_desc *bd;
 	struct list_head slices;
 };
 
@@ -59,19 +60,8 @@ static bool blkmap_slice_available(struct blkmap *bm, struct blkmap_slice *new)
 	return true;
 }
 
-static struct blkmap *blkmap_from_devnum(int devnum)
-{
-	struct udevice *dev;
-	int err;
-
-	err = blk_find_device(UCLASS_BLKMAP, devnum, &dev);
-
-	return err ? NULL : dev_get_priv(dev);
-}
-
 static int blkmap_add(struct blkmap *bm, struct blkmap_slice *new)
 {
-	struct blk_desc *bd = dev_get_uclass_plat(bm->dev);
 	struct list_head *insert = &bm->slices;
 	struct blkmap_slice *bms;
 
@@ -90,7 +80,7 @@ static int blkmap_add(struct blkmap *bm, struct blkmap_slice *new)
 
 	/* Disk might have grown, update the size */
 	bms = list_last_entry(&bm->slices, struct blkmap_slice, node);
-	bd->lba = bms->blknr + bms->blkcnt;
+	bm->bd->lba = bms->blknr + bms->blkcnt;
 	return 0;
 }
 
@@ -118,24 +108,19 @@ static ulong blkmap_linear_write(struct blkmap *bm, struct blkmap_slice *bms,
 	return blk_dwrite(bml->bd, bml->blknr + blknr, blkcnt, buffer);
 }
 
-int blkmap_map_linear(int devnum, lbaint_t blknr, lbaint_t blkcnt,
+int blkmap_map_linear(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
 		      enum uclass_id lcls, int ldevnum, lbaint_t lblknr)
 {
+	struct blkmap *bm = dev_get_plat(dev);
 	struct blkmap_linear *linear;
-	struct blk_desc *bd, *lbd;
-	struct blkmap *bm;
+	struct blk_desc *lbd;
 	int err;
 
-	bm = blkmap_from_devnum(devnum);
-	if (!bm)
-		return -ENODEV;
-
-	bd = dev_get_uclass_plat(bm->dev);
 	lbd = blk_get_devnum_by_uclass_id(lcls, ldevnum);
 	if (!lbd)
 		return -ENODEV;
 
-	if (lbd->blksz != bd->blksz)
+	if (lbd->blksz != bm->bd->blksz)
 		/* We could support block size translation, but we
 		 * don't yet.
 		 */
@@ -175,11 +160,10 @@ static ulong blkmap_mem_read(struct blkmap *bm, struct blkmap_slice *bms,
 			     lbaint_t blknr, lbaint_t blkcnt, void *buffer)
 {
 	struct blkmap_mem *bmm = container_of(bms, struct blkmap_mem, slice);
-	struct blk_desc *bd = dev_get_uclass_plat(bm->dev);
 	char *src;
 
-	src = bmm->addr + (blknr << bd->log2blksz);
-	memcpy(buffer, src, blkcnt << bd->log2blksz);
+	src = bmm->addr + (blknr << bm->bd->log2blksz);
+	memcpy(buffer, src, blkcnt << bm->bd->log2blksz);
 	return blkcnt;
 }
 
@@ -188,11 +172,10 @@ static ulong blkmap_mem_write(struct blkmap *bm, struct blkmap_slice *bms,
 			      const void *buffer)
 {
 	struct blkmap_mem *bmm = container_of(bms, struct blkmap_mem, slice);
-	struct blk_desc *bd = dev_get_uclass_plat(bm->dev);
 	char *dst;
 
-	dst = bmm->addr + (blknr << bd->log2blksz);
-	memcpy(dst, buffer, blkcnt << bd->log2blksz);
+	dst = bmm->addr + (blknr << bm->bd->log2blksz);
+	memcpy(dst, buffer, blkcnt << bm->bd->log2blksz);
 	return blkcnt;
 }
 
@@ -204,16 +187,12 @@ static void blkmap_mem_destroy(struct blkmap *bm, struct blkmap_slice *bms)
 		unmap_sysmem(bmm->addr);
 }
 
-int __blkmap_map_mem(int devnum, lbaint_t blknr, lbaint_t blkcnt, void *addr,
-		     bool remapped)
+int __blkmap_map_mem(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
+		     void *addr, bool remapped)
 {
+	struct blkmap *bm = dev_get_plat(dev);
 	struct blkmap_mem *bmm;
-	struct blkmap *bm;
 	int err;
-
-	bm = blkmap_from_devnum(devnum);
-	if (!bm)
-		return -ENODEV;
 
 	bmm = malloc(sizeof(*bmm));
 	if (!bmm)
@@ -240,133 +219,33 @@ int __blkmap_map_mem(int devnum, lbaint_t blknr, lbaint_t blkcnt, void *addr,
 	return err;
 }
 
-int blkmap_map_mem(int devnum, lbaint_t blknr, lbaint_t blkcnt, void *addr)
+int blkmap_map_mem(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
+		   void *addr)
 {
-	return __blkmap_map_mem(devnum, blknr, blkcnt, addr, false);
+	return __blkmap_map_mem(dev, blknr, blkcnt, addr, false);
 }
 
-int blkmap_map_pmem(int devnum, lbaint_t blknr, lbaint_t blkcnt,
+int blkmap_map_pmem(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
 		    phys_addr_t paddr)
 {
-	struct blk_desc *bd;
-	struct blkmap *bm;
+	struct blkmap *bm = dev_get_plat(dev);
 	void *addr;
 	int err;
 
-	bm = blkmap_from_devnum(devnum);
-	if (!bm)
-		return -ENODEV;
-
-	bd = dev_get_uclass_plat(bm->dev);
-
-	addr = map_sysmem(paddr, blkcnt << bd->log2blksz);
+	addr = map_sysmem(paddr, blkcnt << bm->bd->log2blksz);
 	if (!addr)
 		return -ENOMEM;
 
-	err = __blkmap_map_mem(devnum, blknr, blkcnt, addr, true);
+	err = __blkmap_map_mem(dev, blknr, blkcnt, addr, true);
 	if (err)
 		unmap_sysmem(addr);
 
 	return err;
 }
 
-static struct udevice *blkmap_root(void)
-{
-	static struct udevice *dev;
-	int err;
-
-	if (dev)
-		return dev;
-
-	err = device_bind_driver(dm_root(), "blkmap_root", "blkmap", &dev);
-	if (err)
-		return NULL;
-
-	err = device_probe(dev);
-	if (err) {
-		device_unbind(dev);
-		return NULL;
-	}
-
-	return dev;
-}
-
-int blkmap_create(int devnum)
-{
-	struct udevice *root;
-	struct blk_desc *bd;
-	struct blkmap *bm;
-	int err;
-
-	if (devnum >= 0 && blkmap_from_devnum(devnum))
-		return -EBUSY;
-
-	root = blkmap_root();
-	if (!root)
-		return -ENODEV;
-
-	bm = calloc(1, sizeof(*bm));
-	if (!bm)
-		return -ENOMEM;
-
-	err = blk_create_devicef(root, "blkmap_blk", "blk", UCLASS_BLKMAP,
-				 devnum, 512, 0, &bm->dev);
-	if (err)
-		goto err_free;
-
-	bd = dev_get_uclass_plat(bm->dev);
-
-	/* EFI core isn't keen on zero-sized disks, so we lie. This is
-	 * updated with the correct size once the user adds a
-	 * mapping.
-	 */
-	bd->lba = 1;
-
-	dev_set_priv(bm->dev, bm);
-	INIT_LIST_HEAD(&bm->slices);
-
-	err = blk_probe_or_unbind(bm->dev);
-	if (err)
-		goto err_remove;
-
-	return bd->devnum;
-
-err_remove:
-	device_remove(bm->dev, DM_REMOVE_NORMAL);
-err_free:
-	free(bm);
-	return err;
-}
-
-int blkmap_destroy(int devnum)
-{
-	struct blkmap_slice *bms, *tmp;
-	struct blkmap *bm;
-	int err;
-
-	bm = blkmap_from_devnum(devnum);
-	if (!bm)
-		return -ENODEV;
-
-	err = device_remove(bm->dev, DM_REMOVE_NORMAL);
-	if (err)
-		return err;
-
-	err = device_unbind(bm->dev);
-	if (err)
-		return err;
-
-	list_for_each_entry_safe(bms, tmp, &bm->slices, node) {
-		list_del(&bms->node);
-		free(bms);
-	}
-
-	free(bm);
-	return 0;
-}
-
-static ulong blkmap_read_slice(struct blkmap *bm, struct blkmap_slice *bms,
-			       lbaint_t blknr, lbaint_t blkcnt, void *buffer)
+static ulong blkmap_blk_read_slice(struct blkmap *bm, struct blkmap_slice *bms,
+				   lbaint_t blknr, lbaint_t blkcnt,
+				   void *buffer)
 {
 	lbaint_t nr, cnt;
 
@@ -375,11 +254,11 @@ static ulong blkmap_read_slice(struct blkmap *bm, struct blkmap_slice *bms,
 	return bms->read(bm, bms, nr, cnt, buffer);
 }
 
-static ulong blkmap_read(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
-			 void *buffer)
+static ulong blkmap_blk_read(struct udevice *dev, lbaint_t blknr,
+			     lbaint_t blkcnt, void *buffer)
 {
 	struct blk_desc *bd = dev_get_uclass_plat(dev);
-	struct blkmap *bm = dev_get_priv(dev);
+	struct blkmap *bm = dev_get_parent_plat(dev);
 	struct blkmap_slice *bms;
 	lbaint_t cnt, total = 0;
 
@@ -387,7 +266,7 @@ static ulong blkmap_read(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
 		if (!blkmap_slice_contains(bms, blknr))
 			continue;
 
-		cnt = blkmap_read_slice(bm, bms, blknr, blkcnt, buffer);
+		cnt = blkmap_blk_read_slice(bm, bms, blknr, blkcnt, buffer);
 		blknr += cnt;
 		blkcnt -= cnt;
 		buffer += cnt << bd->log2blksz;
@@ -397,9 +276,9 @@ static ulong blkmap_read(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
 	return total;
 }
 
-static ulong blkmap_write_slice(struct blkmap *bm, struct blkmap_slice *bms,
-				lbaint_t blknr, lbaint_t blkcnt,
-				const void *buffer)
+static ulong blkmap_blk_write_slice(struct blkmap *bm, struct blkmap_slice *bms,
+				    lbaint_t blknr, lbaint_t blkcnt,
+				    const void *buffer)
 {
 	lbaint_t nr, cnt;
 
@@ -408,11 +287,11 @@ static ulong blkmap_write_slice(struct blkmap *bm, struct blkmap_slice *bms,
 	return bms->write(bm, bms, nr, cnt, buffer);
 }
 
-static ulong blkmap_write(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
-			  const void *buffer)
+static ulong blkmap_blk_write(struct udevice *dev, lbaint_t blknr,
+			      lbaint_t blkcnt, const void *buffer)
 {
 	struct blk_desc *bd = dev_get_uclass_plat(dev);
-	struct blkmap *bm = dev_get_priv(dev);
+	struct blkmap *bm = dev_get_parent_plat(dev);
 	struct blkmap_slice *bms;
 	lbaint_t cnt, total = 0;
 
@@ -420,7 +299,7 @@ static ulong blkmap_write(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
 		if (!blkmap_slice_contains(bms, blknr))
 			continue;
 
-		cnt = blkmap_write_slice(bm, bms, blknr, blkcnt, buffer);
+		cnt = blkmap_blk_write_slice(bm, bms, blknr, blkcnt, buffer);
 		blknr += cnt;
 		blkcnt -= cnt;
 		buffer += cnt << bd->log2blksz;
@@ -430,21 +309,135 @@ static ulong blkmap_write(struct udevice *dev, lbaint_t blknr, lbaint_t blkcnt,
 	return total;
 }
 
-static const struct blk_ops blkmap_ops = {
-	.read	= blkmap_read,
-	.write	= blkmap_write,
+static const struct blk_ops blkmap_blk_ops = {
+	.read	= blkmap_blk_read,
+	.write	= blkmap_blk_write,
 };
 
 U_BOOT_DRIVER(blkmap_blk) = {
 	.name		= "blkmap_blk",
 	.id		= UCLASS_BLK,
-	.ops		= &blkmap_ops,
+	.ops		= &blkmap_blk_ops,
 };
 
+int blkmap_dev_bind(struct udevice *dev)
+{
+	struct blkmap *bm = dev_get_plat(dev);
+	struct udevice *blk;
+	int err;
+
+	err = blk_create_devicef(dev, "blkmap_blk", "blk", UCLASS_BLKMAP,
+				 dev_seq(dev), 512, 0, &blk);
+	if (err)
+		return log_msg_ret("blk", err);
+
+	INIT_LIST_HEAD(&bm->slices);
+
+	bm->bd = dev_get_uclass_plat(blk);
+	snprintf(bm->bd->vendor, BLK_VEN_SIZE, "U-Boot");
+	snprintf(bm->bd->product, BLK_PRD_SIZE, "blkmap");
+	snprintf(bm->bd->revision, BLK_REV_SIZE, "1.0");
+
+	/* EFI core isn't keen on zero-sized disks, so we lie. This is
+	 * updated with the correct size once the user adds a
+	 * mapping.
+	 */
+	bm->bd->lba = 1;
+
+	return 0;
+}
+
+int blkmap_dev_unbind(struct udevice *dev)
+{
+	struct blkmap *bm = dev_get_plat(dev);
+	struct blkmap_slice *bms, *tmp;
+
+	list_for_each_entry_safe(bms, tmp, &bm->slices, node) {
+		list_del(&bms->node);
+		free(bms);
+	}
+
+	return 0;
+}
+
 U_BOOT_DRIVER(blkmap_root) = {
-	.name		= "blkmap_root",
+	.name		= "blkmap_dev",
 	.id		= UCLASS_BLKMAP,
+	.bind		= blkmap_dev_bind,
+	.unbind		= blkmap_dev_unbind,
+	.plat_auto	= sizeof(struct blkmap),
 };
+
+struct udevice *blkmap_from_label(const char *label)
+{
+	struct udevice *dev;
+	struct uclass *uc;
+	struct blkmap *bm;
+
+	uclass_id_foreach_dev(UCLASS_BLKMAP, dev, uc) {
+		bm = dev_get_plat(dev);
+		if (bm->label && !strcmp(label, bm->label))
+			return dev;
+	}
+
+	return NULL;
+}
+
+int blkmap_create(const char *label, struct udevice **devp)
+{
+	char *hname, *hlabel;
+	struct udevice *dev;
+	struct blkmap *bm;
+	size_t namelen;
+	int err;
+
+	dev = blkmap_from_label(label);
+	if (dev) {
+		err = -EBUSY;
+		goto err;
+	}
+
+	hlabel = strdup(label);
+	if (!hlabel) {
+		err = -ENOMEM;
+		goto err;
+	}
+
+	namelen = strlen("blkmap-") + strlen(label) + 1;
+	hname = malloc(namelen);
+	if (!hname) {
+		err = -ENOMEM;
+		goto err_free_hlabel;
+	}
+
+	strlcpy(hname, "blkmap-", namelen);
+	strlcat(hname, label, namelen);
+
+	err = device_bind_driver(dm_root(), "blkmap_dev", hname, &dev);
+	if (err)
+		goto err_free_hname;
+
+	device_set_name_alloced(dev);
+	bm = dev_get_plat(dev);
+	bm->label = hlabel;
+
+	if (devp)
+		*devp = dev;
+
+	return 0;
+
+err_free_hname:
+	free(hname);
+err_free_hlabel:
+	free(hlabel);
+err:
+	return err;
+}
+
+int blkmap_destroy(struct udevice *dev)
+{
+	return device_unbind(dev);
+}
 
 UCLASS_DRIVER(blkmap) = {
 	.id		= UCLASS_BLKMAP,

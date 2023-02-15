@@ -13,7 +13,7 @@
 static int blkmap_curr_dev;
 
 struct map_ctx {
-	int devnum;
+	struct udevice *dev;
 	lbaint_t blknr, blkcnt;
 };
 
@@ -43,7 +43,7 @@ int do_blkmap_map_linear(struct map_ctx *ctx, int argc, char *const argv[])
 		return CMD_RET_FAILURE;
 	}
 
-	err = blkmap_map_linear(ctx->devnum, ctx->blknr, ctx->blkcnt,
+	err = blkmap_map_linear(ctx->dev, ctx->blknr, ctx->blkcnt,
 				lbd->uclass_id, ldevnum, lblknr);
 	if (err) {
 		printf("Unable to map \"%s %d\" at block 0x" LBAF ": %d\n",
@@ -67,7 +67,7 @@ int do_blkmap_map_mem(struct map_ctx *ctx, int argc, char *const argv[])
 
 	addr = hextoul(argv[1], NULL);
 
-	err = blkmap_map_pmem(ctx->devnum, ctx->blknr, ctx->blkcnt, addr);
+	err = blkmap_map_pmem(ctx->dev, ctx->blknr, ctx->blkcnt, addr);
 	if (err) {
 		printf("Unable to map %#llx at block 0x" LBAF ": %d\n",
 		       (unsigned long long)addr, ctx->blknr, err);
@@ -95,7 +95,12 @@ static int do_blkmap_map(struct cmd_tbl *cmdtp, int flag,
 	if (argc < 5)
 		return CMD_RET_USAGE;
 
-	ctx.devnum = dectoul(argv[1], NULL);
+	ctx.dev = blkmap_from_label(argv[1]);
+	if (!ctx.dev) {
+		printf("\"%s\" is not the name of any known blkmap\n", argv[1]);
+		return CMD_RET_FAILURE;
+	}
+
 	ctx.blknr = hextoul(argv[2], NULL);
 	ctx.blkcnt = hextoul(argv[3], NULL);
 	argc -= 4;
@@ -113,38 +118,49 @@ static int do_blkmap_map(struct cmd_tbl *cmdtp, int flag,
 static int do_blkmap_create(struct cmd_tbl *cmdtp, int flag,
 			    int argc, char *const argv[])
 {
-	int devnum = -1;
+	const char *label;
+	int err;
 
-	if (argc == 2)
-		devnum = dectoul(argv[1], NULL);
+	if (argc != 2)
+		return CMD_RET_USAGE;
 
-	devnum = blkmap_create(devnum);
-	if (devnum < 0) {
-		printf("Unable to create device: %d\n", devnum);
+	label = argv[1];
+
+	err = blkmap_create(label, NULL);
+	if (err) {
+		printf("Unable to create \"%s\": %d\n", label, err);
 		return CMD_RET_FAILURE;
 	}
 
-	printf("Created device %d\n", devnum);
+	printf("Created \"%s\"\n", label);
 	return CMD_RET_SUCCESS;
 }
 
 static int do_blkmap_destroy(struct cmd_tbl *cmdtp, int flag,
 			     int argc, char *const argv[])
 {
-	int err, devnum;
+	struct udevice *dev;
+	const char *label;
+	int err;
 
 	if (argc != 2)
 		return CMD_RET_USAGE;
 
-	devnum = dectoul(argv[1], NULL);
+	label = argv[1];
 
-	err = blkmap_destroy(devnum);
-	if (err) {
-		printf("Unable to destroy device %d: %d\n", devnum, err);
+	dev = blkmap_from_label(label);
+	if (!dev) {
+		printf("\"%s\" is not the name of any known blkmap\n", label);
 		return CMD_RET_FAILURE;
 	}
 
-	printf("Destroyed device %d\n", devnum);
+	err = blkmap_destroy(dev);
+	if (err) {
+		printf("Unable to destroy \"%s\": %d\n", label, err);
+		return CMD_RET_FAILURE;
+	}
+
+	printf("Destroyed \"%s\"\n", label);
 	return CMD_RET_SUCCESS;
 }
 
@@ -167,10 +183,10 @@ U_BOOT_CMD_WITH_SUBCMDS(
 	"blkmap dev [<dev>] - show or set current blkmap device\n"
 	"blkmap read <addr> <blk#> <cnt>\n"
 	"blkmap write <addr> <blk#> <cnt>\n"
-	"blkmap create [<dev>] - create device\n"
-	"blkmap destroy <dev> - destroy device\n"
-	"blkmap map <dev> <blk#> <cnt> linear <interface> <dev> <blk#> - device mapping\n"
-	"blkmap map <dev> <blk#> <cnt> mem <addr> - memory mapping\n",
+	"blkmap create <label> - create device\n"
+	"blkmap destroy <label> - destroy device\n"
+	"blkmap map <label> <blk#> <cnt> linear <interface> <dev> <blk#> - device mapping\n"
+	"blkmap map <label> <blk#> <cnt> mem <addr> - memory mapping\n",
 	U_BOOT_SUBCMD_MKENT(info, 2, 1, do_blkmap_common),
 	U_BOOT_SUBCMD_MKENT(part, 2, 1, do_blkmap_common),
 	U_BOOT_SUBCMD_MKENT(dev, 4, 1, do_blkmap_common),
