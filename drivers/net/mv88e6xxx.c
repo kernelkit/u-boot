@@ -33,6 +33,8 @@
 #include <miiphy.h>
 #include <net/dsa.h>
 
+#include <asm-generic/gpio.h>
+
 /* Device addresses */
 #define DEVADDR_PHY(p)			(p)
 #define DEVADDR_SERDES			0x0F
@@ -146,6 +148,8 @@ struct mv88e6xxx_priv {
 	int port_reg_base;	/* Base of the switch port registers */
 	u8 global1;	/* Offset of Switch Global 1 registers */
 	u8 global2;	/* Offset of Switch Global 2 registers */
+
+	struct gpio_desc reset;
 };
 
 /* Wait for the current SMI indirect command to complete */
@@ -675,6 +679,37 @@ static int mv88e6xxx_probe_mdio(struct udevice *dev)
 	return ret;
 }
 
+static int mv88e6xxx_probe_reset(struct udevice *dev)
+{
+	struct mv88e6xxx_priv *priv = dev_get_priv(dev);
+	int err;
+
+	if (!CONFIG_IS_ENABLED(DM_GPIO))
+		return 0;
+
+	err = gpio_request_by_name(dev, "reset-gpios", 0,
+				   &priv->reset, GPIOD_IS_OUT);
+	if (err && (err != -ENOENT))
+		return err;
+
+	if (dm_gpio_is_valid(&priv->reset)) {
+		dm_gpio_set_value(&priv->reset, 0);
+		mdelay(10);
+	}
+
+	return 0;
+}
+
+static void mv88e6xxx_remove_reset(struct udevice *dev)
+{
+	struct mv88e6xxx_priv *priv = dev_get_priv(dev);
+
+	if (CONFIG_IS_ENABLED(DM_GPIO) && dm_gpio_is_valid(&priv->reset)) {
+		dm_gpio_set_value(&priv->reset, 1);
+		dm_gpio_free(dev, &priv->reset);
+	}
+}
+
 static int mv88e6xxx_probe(struct udevice *dev)
 {
 	struct dsa_pdata *dsa_pdata = dev_get_uclass_plat(dev);
@@ -685,7 +720,8 @@ static int mv88e6xxx_probe(struct udevice *dev)
 	if (ofnode_valid(dev_ofnode(dev)) &&
 	    !ofnode_is_enabled(dev_ofnode(dev))) {
 		dev_dbg(dev, "switch disabled\n");
-		return -ENODEV;
+		ret = -ENODEV;
+		goto err;
 	}
 
 	smi_addr = dev_read_addr(dev);
@@ -695,14 +731,18 @@ static int mv88e6xxx_probe(struct udevice *dev)
 	}
 	priv->smi_addr = smi_addr;
 
+	ret = mv88e6xxx_probe_reset(dev);
+	if (ret)
+		goto err;
+
 	/* probe internal mdio bus */
 	ret = mv88e6xxx_probe_mdio(dev);
 	if (ret)
-		return ret;
+		goto err_remove_reset;
 
 	ret = mv88e6xxx_priv_reg_offs_pre_init(dev);
 	if (ret)
-		return ret;
+		goto err_remove_reset;
 
 	dev_dbg(dev, "ID=0x%x PORT_BASE=0x%02x GLOBAL1=0x%02x GLOBAL2=0x%02x\n",
 		priv->id, priv->port_reg_base, priv->global1, priv->global2);
@@ -724,27 +764,39 @@ static int mv88e6xxx_probe(struct udevice *dev)
 		priv->port_count = 7;
 		break;
 	default:
-		return -ENODEV;
+		ret = -ENODEV;
+		goto err_remove_reset;
 	}
 
 	ret = mv88e6xxx_switch_reset(dev);
 	if (ret < 0)
-		return ret;
+		goto err_remove_reset;
 
 	if (mv88e6xxx_6352_family(dev)) {
 		val = mv88e6xxx_get_cmode(dev, dsa_pdata->cpu_port);
 		if (val < 0)
-			return val;
+			goto err_remove_reset;
 		/* initialize serdes */
 		if (val == PORT_REG_STATUS_CMODE_100BASE_X ||
 		    val == PORT_REG_STATUS_CMODE_1000BASE_X ||
 		    val == PORT_REG_STATUS_CMODE_SGMII) {
 			ret = mv88e6xxx_serdes_init(dev);
 			if (ret < 0)
-				return ret;
+				goto err_remove_reset;
 		}
 	}
 
+	return 0;
+
+err_remove_reset:
+	mv88e6xxx_remove_reset(dev);
+err:
+	return ret;
+}
+
+static int mv88e6xxx_remove(struct udevice *dev)
+{
+	mv88e6xxx_remove_reset(dev);
 	return 0;
 }
 
@@ -758,6 +810,8 @@ U_BOOT_DRIVER(mv88e6xxx) = {
 	.id		= UCLASS_DSA,
 	.of_match	= mv88e6xxx_ids,
 	.probe		= mv88e6xxx_probe,
+	.remove		= mv88e6xxx_remove,
 	.ops		= &mv88e6xxx_dsa_ops,
 	.priv_auto	= sizeof(struct mv88e6xxx_priv),
+	.flags		= DM_FLAG_OS_PREPARE,
 };
