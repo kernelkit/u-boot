@@ -49,9 +49,15 @@ static int pcf8575_i2c_write(struct udevice *dev, unsigned int word)
 {
 	struct dm_i2c_chip *chip = dev_get_parent_plat(dev);
 	u8 buf[2] = { word & 0xff, word >> 8, };
+	struct i2c_msg wmsg = {
+		.addr = chip->chip_addr,
+		.flags = 0,
+		.buf = buf,
+		.len = dev_get_driver_data(dev),
+	};
 	int ret;
 
-	ret = dm_i2c_write(dev, 0, buf, dev_get_driver_data(dev));
+	ret = dm_i2c_xfer(dev, &wmsg, 1);
 	if (ret)
 		printf("%s i2c write failed to addr %x\n", __func__,
 		       chip->chip_addr);
@@ -63,9 +69,15 @@ static int pcf8575_i2c_read(struct udevice *dev)
 {
 	struct dm_i2c_chip *chip = dev_get_parent_plat(dev);
 	u8 buf[2] = {0x00, 0x00};
+	struct i2c_msg rmsg = {
+		.addr = chip->chip_addr,
+		.flags = I2C_M_RD,
+		.buf = buf,
+		.len = dev_get_driver_data(dev),
+	};
 	int ret;
 
-	ret = dm_i2c_read(dev, 0, buf, dev_get_driver_data(dev));
+	ret = dm_i2c_xfer(dev, &rmsg, 1);
 	if (ret) {
 		printf("%s i2c read failed from addr %x\n", __func__,
 		       chip->chip_addr);
