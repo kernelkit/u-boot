@@ -3,3 +3,5 @@
 # Copyright (C) 2016 Stefan Roese <sr@denx.de>
 
 obj-y = cpu.o cache_llc.o dram.o
+
+obj-$(CONFIG_MVEBU_8K_EFUSE) += efuse.o

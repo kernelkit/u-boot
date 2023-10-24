@@ -421,6 +421,13 @@ config MVEBU_EFUSE_VHV_GPIO_ACTIVE_LOW
 	bool "VHV_Enable GPIO is Active Low"
 	depends on MVEBU_EFUSE_VHV_GPIO != ""
 
+config MVEBU_8K_EFUSE
+	bool "Enable eFuse support"
+	depends on ARMADA_8K
+	select HEX_DUMP
+	help
+	  Enable support for reading and writing eFuses on mvebu SoCs.
+
 config SECURED_MODE_IMAGE
 	bool "Build image for trusted boot"
 	default false
