@@ -679,6 +679,7 @@ static int mv88e6xxx_probe(struct udevice *dev)
 {
 	struct dsa_pdata *dsa_pdata = dev_get_uclass_plat(dev);
 	struct mv88e6xxx_priv *priv = dev_get_priv(dev);
+	fdt_addr_t smi_addr;
 	int val, ret;
 
 	if (ofnode_valid(dev_ofnode(dev)) &&
@@ -686,6 +687,13 @@ static int mv88e6xxx_probe(struct udevice *dev)
 		dev_dbg(dev, "switch disabled\n");
 		return -ENODEV;
 	}
+
+	smi_addr = dev_read_addr(dev);
+	if (smi_addr == FDT_ADDR_T_NONE) {
+		dev_err(dev, "Missing SMI address\n");
+		return -EINVAL;
+	}
+	priv->smi_addr = smi_addr;
 
 	/* probe internal mdio bus */
 	ret = mv88e6xxx_probe_mdio(dev);
