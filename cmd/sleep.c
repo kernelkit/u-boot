@@ -39,8 +39,10 @@ static int do_sleep(struct cmd_tbl *cmdtp, int flag, int argc,
 	delay += mdelay;
 
 	while (get_timer(start) < delay) {
-		if (ctrlc())
+		if (ctrlc()) {
+			clear_ctrlc();
 			return CMD_RET_FAILURE;
+		}
 
 		udelay(100);
 	}
