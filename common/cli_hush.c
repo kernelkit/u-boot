@@ -1796,13 +1796,6 @@ static int run_list_real(struct pipe *pi)
 	for (; pi; pi = (flag_restore != 0) ? rpipe : pi->next) {
 		if (pi->r_mode == RES_WHILE || pi->r_mode == RES_UNTIL ||
 			pi->r_mode == RES_FOR) {
-#ifdef __U_BOOT__
-				/* check Ctrl-C */
-				ctrlc();
-				if ((had_ctrlc())) {
-					return 1;
-				}
-#endif
 				flag_restore = 0;
 				if (!rpipe) {
 					flag_rep = 0;
