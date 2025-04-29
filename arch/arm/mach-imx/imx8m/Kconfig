@@ -281,6 +281,15 @@ config TARGET_VERDIN_IMX8MP
 	select IMX8M_LPDDR4
 	imply OF_UPSTREAM
 
+config TARGET_VEST_IMX8MP_E2I_PLUS
+	bool "Support APC-VEST i.MX8M Plus Dev Kit"
+	select IMX8MP
+	select SUPPORT_SPL
+	select IMX8M_LPDDR4
+	select FSL_CAAM
+	select ARCH_MISC_INIT
+	select SPL_CRYPTO if SPL
+
 config TARGET_IMX8MM_BEACON
 	bool "imx8mm Beacon Embedded devkit"
 	select IMX8MM
@@ -386,6 +395,7 @@ source "board/purism/librem5/Kconfig"
 source "board/ronetix/imx8mq-cm/Kconfig"
 source "board/technexion/pico-imx8mq/Kconfig"
 source "board/variscite/imx8mn_var_som/Kconfig"
+source "board/vest/e2i_plus/Kconfig"
 source "board/toradex/verdin-imx8mm/Kconfig"
 source "board/toradex/verdin-imx8mp/Kconfig"
 
