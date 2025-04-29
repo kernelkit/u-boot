@@ -1,0 +1,7 @@
+Vest i.MX8M Plus Dev Kit
+M:	Joachim Wiberg <troglobit@gmail.com>
+S:	Maintained
+F:	board/vest/e2i_plus/
+F:	configs/imx8mp_vest_e2i_plus_defconfig 
+F:	doc/board/vest/e2i_plus.rst
+F:	include/configs/vest_e2i_plus.h
