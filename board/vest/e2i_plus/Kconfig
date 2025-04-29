@@ -1,0 +1,15 @@
+if TARGET_VEST_IMX8MP_E2I_PLUS
+
+config SYS_BOARD
+	default "e2i_plus"
+
+config SYS_VENDOR
+	default "vest"
+
+config SYS_CONFIG_NAME
+	default "vest_e2i_plus"
+
+config IMX_CONFIG
+	default "board/vest/e2i_plus/imximage.cfg"
+
+endif

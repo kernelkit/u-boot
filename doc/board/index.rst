@@ -67,6 +67,7 @@ Board-specific doc
    ti/index
    toradex/index
    variscite/index
+   vest/index
    wexler/index
    xen/index
    xilinx/index
