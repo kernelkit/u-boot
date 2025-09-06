@@ -176,6 +176,20 @@ config CMD_CPU
 	  internal name) and clock frequency. Other information may be
 	  available depending on the CPU driver.
 
+config CMD_RPI_DISPLAY
+	bool "rpidisplay"
+	depends on ARCH_BCM283X
+	help
+	  Enable commands to detect Raspberry Pi 7" DSI display connection.
+
+	  This provides two commands:
+	  - rpidisplay: Shows detailed detection information
+	  - testrpidisplay: Silent test for use in boot scripts
+
+	  Detection is performed by querying the VideoCore GPU for the
+	  active display resolution. The official Raspberry Pi 7" DSI
+	  display uses 800x480 resolution.
+
 config CMD_FWU_METADATA
 	bool "fwu metadata read"
 	depends on FWU_MULTI_BANK_UPDATE

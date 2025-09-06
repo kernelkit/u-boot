@@ -48,6 +48,7 @@ obj-$(CONFIG_CMD_CLK) += clk.o
 obj-$(CONFIG_CMD_CLS) += cls.o
 obj-$(CONFIG_CMD_CONFIG) += config.o
 obj-$(CONFIG_CMD_CONITRACE) += conitrace.o
+obj-$(CONFIG_CMD_RPI_DISPLAY) += rpi_display.o
 obj-$(CONFIG_CMD_CONSOLE) += console.o
 obj-$(CONFIG_CMD_CPU) += cpu.o
 obj-$(CONFIG_CMD_DATE) += date.o
@@ -201,7 +202,6 @@ obj-$(CONFIG_CMD_LZMADEC) += lzmadec.o
 obj-$(CONFIG_CMD_UFS) += ufs.o
 obj-$(CONFIG_CMD_USB) += usb.o disk.o
 obj-$(CONFIG_CMD_VIDCONSOLE) += video.o
-
 obj-$(CONFIG_CMD_FASTBOOT) += fastboot.o
 obj-$(CONFIG_CMD_FS_UUID) += fs_uuid.o
 
