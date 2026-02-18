@@ -1,0 +1,10 @@
+if TARGET_MT7986
+
+config BOARD_BPI_R3
+	bool "BananaPi BPI-R3 / BPI-R3-mini board support"
+	select BOARD_LATE_INIT
+	help
+	  Enable runtime variant detection for BananaPi BPI-R3 and BPI-R3-mini,
+	  selecting the correct device tree from a FIT image.
+
+endif
