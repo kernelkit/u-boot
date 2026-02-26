@@ -4,3 +4,8 @@ S:	Maintained
 F:	board/mediatek/mt7622
 F:	include/configs/mt7622.h
 F:	configs/mt7622_rfb_defconfig
+F:	configs/mt7622_bpir64_emmc_defconfig
+F:	configs/mt7622_bpir64_sd_defconfig
+F:	configs/mt7622_bpir64_snand_defconfig
+F:	arch/arm/dts/mt7622-bananapi-bpi-r64.dts
+F:	arch/arm/dts/mt7622-bananapi-bpi-r64-nand.dts
