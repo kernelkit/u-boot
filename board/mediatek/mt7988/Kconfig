@@ -2,6 +2,8 @@ if TARGET_MT7988
 
 config BOARD_BPI_R4
 	bool "BananaPi BPI-R4 / BPI-R4-2g5 board support"
+	select BOARD_LATE_INIT
+	select OF_SYSTEM_SETUP
 	help
 	  Enable runtime variant detection for BananaPi BPI-R4 and BPI-R4-2g5,
 	  selecting the correct device tree from a FIT image.

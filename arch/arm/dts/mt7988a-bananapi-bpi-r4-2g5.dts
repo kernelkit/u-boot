@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (c) 2024 BananaPi
+ * Copyright (c) 2026 KernelKit
+ *
+ * U-Boot device tree for BananaPi BPI-R4-2g5 (MediaTek MT7988A)
+ * Variant with internal 2.5G PHY on GMAC1 instead of SFP+/USXGMII
+ */
+
+#include "mt7988a-bananapi-bpi-r4.dts"
+
+/ {
+	model = "BananaPi BPI-R4-2g5";
+	compatible = "bananapi,bpi-r4-2g5", "bananapi,bpi-r4",
+		     "mediatek,mt7988a", "mediatek,mt7988";
+};

@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * SD card boot variant of the BananaPi BPI-R4 U-Boot device tree.
+ * eMMC and SD use separate physical pins on MT7988, so both are
+ * accessible simultaneously — boot from SD, flash eMMC.
+ */
+
+/dts-v1/;
+#include "mt7988a-bananapi-bpi-r4.dts"
+
+/* Override mmc0 for SD card: swap pinctrl, enable high-speed, add CD */
+&mmc0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&mmc0_pins_sdcard>;
+	bus-width = <4>;
+	max-frequency = <52000000>;
+	cap-sd-highspeed;
+	cd-gpios = <&pio 12 GPIO_ACTIVE_LOW>;
+	vmmc-supply = <&reg_3p3v>;
+	vqmmc-supply = <&reg_3p3v>;
+	/delete-property/ cap-mmc-highspeed;
+	/delete-property/ cap-mmc-hw-reset;
+	/delete-property/ non-removable;
+};
+
+&pio {
+	mmc0_pins_sdcard: mmc0-sdcard-pins {
+		mux {
+			function = "flash";
+			groups = "sdcard";
+		};
+	};
+};

@@ -942,6 +942,9 @@ static const int mt7988_emmc_45_pins[] = {
 	21, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37 };
 static const int mt7988_emmc_45_funcs[] = { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5 };
 
+static const int mt7988_sdcard_pins[] = { 32, 33, 34, 35, 36, 37 };
+static const int mt7988_sdcard_funcs[] = { 5, 5, 5, 5, 5, 5 };
+
 static const int mt7988_emmc_51_pins[] = {
 	38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49 };
 static const int mt7988_emmc_51_funcs[] = {
@@ -1101,6 +1104,7 @@ static const struct mtk_group_desc mt7988_groups[] = {
 	PINCTRL_PIN_GROUP("udi", mt7988_udi),
 	PINCTRL_PIN_GROUP("emmc_45", mt7988_emmc_45),
 	PINCTRL_PIN_GROUP("emmc_51", mt7988_emmc_51),
+	PINCTRL_PIN_GROUP("sdcard", mt7988_sdcard),
 	PINCTRL_PIN_GROUP("2p5g_ext_mdio", mt7988_2p5g_ext_mdio),
 	PINCTRL_PIN_GROUP("gbe_ext_mdio", mt7988_gbe_ext_mdio),
 	PINCTRL_PIN_GROUP("pcm", mt7988_pcm),
@@ -1197,7 +1201,7 @@ static const char *const mt7988_pmic_groups[] = { "pmic", };
 static const char *const mt7988_wdt_groups[] = { "watchdog", };
 static const char *const mt7988_spi_groups[] = { "spi0", "spi0_wp_hold",
 	"spi1", "spi2", "spi2_wp_hold", };
-static const char *const mt7988_flash_groups[] = { "emmc_45", "snfi",
+static const char *const mt7988_flash_groups[] = { "emmc_45", "sdcard", "snfi",
 	"emmc_51" };
 static const char *const mt7988_uart_groups[] = { "uart2", "tops_uart0_0",
 	"uart2_0", "uart1_0", "uart2_1",
