@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * BPI-R3 / BPI-R3-mini board variant detection
+ * BPI-R3 / BPI-R3-mini / Acer Connect Vero W board variant detection
  */
 
 #include <env.h>
 #include <fdt_support.h>
 #include <image.h>
+#include <asm/cache.h>
 #include <asm/global_data.h>
 #include <asm/io.h>
 #include <linux/delay.h>
+#include <linux/sizes.h>
 #include <linux/string.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -16,7 +18,73 @@ DECLARE_GLOBAL_DATA_PTR;
 enum bpir3_variant {
 	BPIR3,
 	BPIR3_MINI,
+	ASUS_VERO_W,
 };
+
+/*
+ * Acer Connect Vero W ships with 1 GiB DDR; BPI-R3 and BPI-R3-mini
+ * both ship with 2 GiB. Probe the +1 GiB mark with patterns that are
+ * distinct from a parallel write at the DRAM base, so an aliased
+ * (wrap-around) address is detected as such instead of returning a
+ * false positive when the DDR controller mirrors the high address
+ * onto base RAM.
+ *
+ * MT7986 DRAM base is 0x40000000. NOTE: when this board file is
+ * chain-loaded via "go" from a previous U-Boot, the dcache is
+ * already enabled. We must flush after writes and invalidate before
+ * reads so the test actually exercises the AXI/DDR bus instead of
+ * giving a false positive from cache hits at +1 GiB.
+ */
+#define MT7986_DRAM_BASE	0x40000000UL
+#define PROBE_BASE_ADDR		MT7986_DRAM_BASE
+#define PROBE_HIGH_ADDR		(MT7986_DRAM_BASE + SZ_1G)
+#define PROBE_LINE_BYTES	64	/* worst-case ARMv8 cacheline */
+
+static void probe_flush(unsigned long addr)
+{
+	flush_dcache_range(addr, addr + PROBE_LINE_BYTES);
+}
+
+static void probe_invalidate(unsigned long addr)
+{
+	invalidate_dcache_range(addr, addr + PROBE_LINE_BYTES);
+}
+
+static u32 probe_read(unsigned long addr)
+{
+	probe_invalidate(addr);
+	return *(volatile u32 *)addr;
+}
+
+static void probe_write(unsigned long addr, u32 val)
+{
+	*(volatile u32 *)addr = val;
+	probe_flush(addr);
+}
+
+static bool ram_above_1g_present(void)
+{
+	u32 sb, sp, b1, p1, b2, p2;
+
+	sb = probe_read(PROBE_BASE_ADDR);
+	sp = probe_read(PROBE_HIGH_ADDR);
+
+	probe_write(PROBE_BASE_ADDR, 0x12345678);
+	probe_write(PROBE_HIGH_ADDR, 0xdeadbeef);
+	b1 = probe_read(PROBE_BASE_ADDR);
+	p1 = probe_read(PROBE_HIGH_ADDR);
+
+	probe_write(PROBE_BASE_ADDR, 0xa5a5a5a5);
+	probe_write(PROBE_HIGH_ADDR, 0x5a5a5a5a);
+	b2 = probe_read(PROBE_BASE_ADDR);
+	p2 = probe_read(PROBE_HIGH_ADDR);
+
+	probe_write(PROBE_BASE_ADDR, sb);
+	probe_write(PROBE_HIGH_ADDR, sp);
+
+	return b1 == 0x12345678 && p1 == 0xdeadbeef &&
+	       b2 == 0xa5a5a5a5 && p2 == 0x5a5a5a5a;
+}
 
 /*
  * Detect BPI-R3 vs BPI-R3-mini by probing for the Airoha EN8811H PHY.
@@ -171,6 +239,10 @@ static enum bpir3_variant detect_bpir3_variant(void)
 	unsigned int pwr_b[] = { EN8811H_PWR_B_GPIO, EN8811H_PWR2_B_GPIO };
 	unsigned int i;
 
+	/* 1 GiB DDR → Acer Connect Vero W; skip MDIO probe entirely. */
+	if (!ram_above_1g_present())
+		return ASUS_VERO_W;
+
 	/* Switch GPIO67 (MDC) and GPIO68 (MDIO) to eth function */
 	gpio_set_mode(MDC_GPIO,  1);
 	gpio_set_mode(MDIO_GPIO, 1);
@@ -207,6 +279,8 @@ int board_fit_config_name_match(const char *name)
 	switch (variant) {
 	case BPIR3_MINI:
 		return strcmp(name, "mt7986a-bpi-r3-mini") ? -1 : 0;
+	case ASUS_VERO_W:
+	return strcmp(name, "mt7986a-acer-connect-vero-w") ? -1 : 0;
 	case BPIR3:
 	default:
 		/*
@@ -224,6 +298,8 @@ int board_late_init(void)
 
 	if (model && strstr(model, "Mini"))
 		env_set("fdtfile", "mediatek/mt7986a-bananapi-bpi-r3-mini.dtb");
+	else if (model && strstr(model, "Vero"))
+	env_set("fdtfile", "mediatek/mt7986a-acer-connect-vero-w.dtb");
 
 	return 0;
 }
