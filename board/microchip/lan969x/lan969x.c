@@ -77,6 +77,16 @@ enum env_location env_get_location(enum env_operation op, int prio)
 {
 	boot_source_type_t boot_source = tfa_get_boot_source();
 
+	/*
+	 * Systems keeping the environment in the control device tree
+	 * build no location driver at all.  Asking for one that was
+	 * never built fails env_init() with -ENODEV.
+	 */
+	if (!CONFIG_IS_ENABLED(ENV_IS_IN_MMC) &&
+	    !CONFIG_IS_ENABLED(ENV_IS_IN_SPI_FLASH) &&
+	    !CONFIG_IS_ENABLED(ENV_IS_IN_FAT))
+		return prio == 0 ? ENVL_NOWHERE : ENVL_UNKNOWN;
+
 	switch(boot_source) {
 	case BOOT_SOURCE_EMMC:
 		return prio == 0 ? ENVL_MMC : ENVL_UNKNOWN;
