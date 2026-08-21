@@ -216,6 +216,10 @@
 &mmc0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&mmc0_pins_emmc>;
+	/* TODO (v2026.04+): raise to 200000000 and add mmc-hs200-1_8v for HS200
+	 * mode.  CONFIG_MMC_HS200_SUPPORT is already enabled in the defconfig.
+	 * Measure boot time before/after — 1.8V I/O signalling (vqmmc) must be
+	 * confirmed working on the board first. */
 	max-frequency = <52000000>;
 	bus-width = <8>;
 	cap-mmc-highspeed;
